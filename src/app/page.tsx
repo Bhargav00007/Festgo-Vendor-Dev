@@ -1,5 +1,5 @@
 import React from "react";
-import VendorListPage from "./vendorslist/page";
+import VendorListPage from "../app/vendorslist/page";
 
 const page = () => {
   return (
