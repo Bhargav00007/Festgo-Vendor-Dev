@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
+import { BarLoader } from "react-spinners";
 
 type Property = {
   id: string;
@@ -50,7 +51,6 @@ export default function VendorPropertyPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch vendor list
         const vendorRes = await fetch(
           "https://server.festgo.in/api/admin/vendors",
           {
@@ -65,7 +65,6 @@ export default function VendorPropertyPage() {
         const foundVendor = allVendors.find((v) => v.id === vendorId);
         setVendor(foundVendor || null);
 
-        // Fetch properties
         const propRes = await fetch(
           `https://server.festgo.in/api/admin/property/${vendorId}`,
           {
@@ -129,13 +128,17 @@ export default function VendorPropertyPage() {
       : 1;
   const profileSrc = `/profiles/user-${imageIndex}.jpg`;
 
-  if (loading) return <div className="p-4">Loading vendor properties...</div>;
+  if (loading)
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <BarLoader color="#3B82F6" />
+      </div>
+    );
 
   return (
     <div className="max-w-5xl mx-auto p-6 space-y-6">
-      {/* Vendor Info */}
       {vendor && (
-        <div className="flex items-center gap-4 border border-gray-300 rounded-xl p-4 bg-white ">
+        <div className="flex items-center gap-4 border border-gray-300 rounded-xl p-4 bg-white">
           <Image
             src={profileSrc}
             alt="Vendor Profile"
@@ -159,7 +162,6 @@ export default function VendorPropertyPage() {
         </div>
       )}
 
-      {/* Property List */}
       <div className="space-y-6">
         {properties.length === 0 ? (
           <div className="text-gray-500 border border-gray-300 rounded-xl p-4 text-center">
@@ -169,7 +171,7 @@ export default function VendorPropertyPage() {
           properties.map((prop) => (
             <div
               key={prop.id}
-              className="border border-gray-300 rounded-2xl p-6  bg-white"
+              className="border border-gray-300 rounded-2xl p-6 bg-white"
             >
               <p className="text-sm mb-2 text-gray-500">
                 <strong>Property ID:</strong> {prop.id}
@@ -202,6 +204,7 @@ export default function VendorPropertyPage() {
                 <strong>Status:</strong>{" "}
                 {prop.is_completed ? "🟢 Active" : "🔴 Inactive"}
               </p>
+
               <div className="mt-4">
                 <button
                   onClick={() =>

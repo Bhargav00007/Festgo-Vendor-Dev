@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { BarLoader } from "react-spinners";
 
 type Vendor = {
   id: string;
@@ -71,7 +72,12 @@ export default function VendorListPage() {
     fetchVendorsWithProperties();
   }, []);
 
-  if (loading) return <div className="p-4">Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <BarLoader color="#3b82f6" />
+      </div>
+    );
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
