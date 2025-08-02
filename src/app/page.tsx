@@ -1,12 +1,6 @@
-import React from "react";
-import VendorListPage from "../app/vendorslist/page";
+// src/app/page.tsx
+import { redirect } from "next/navigation";
 
-const page = () => {
-  return (
-    <div>
-      <VendorListPage />
-    </div>
-  );
-};
-
-export default page;
+export default function HomePage() {
+  redirect("/vendorslist");
+}
