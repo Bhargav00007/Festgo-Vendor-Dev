@@ -8,17 +8,20 @@ export default function VendorLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
   const router = useRouter();
 
-  // If already logged in, redirect to /vendorslist
+  // Redirect if already logged in
   useEffect(() => {
     const token = localStorage.getItem("vendorToken");
     if (token) {
       router.replace("/vendorslist");
+    } else {
+      setCheckingAuth(false); // allow login form to show
     }
-  }, [router]);
+  }, []);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -47,8 +50,12 @@ export default function VendorLoginPage() {
       } else {
         setError("Something went wrong");
       }
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (checkingAuth) return null; // Prevent form flicker while checking auth
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 -mt-20">
