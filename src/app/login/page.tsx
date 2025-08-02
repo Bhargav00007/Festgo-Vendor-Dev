@@ -15,7 +15,7 @@ export default function VendorLoginPage() {
   useEffect(() => {
     const token = localStorage.getItem("vendorToken");
     if (token) {
-      router.replace("/vendorslist");
+      router.replace("/vendorlist");
     } else {
       setCheckingAuth(false); // allow login form to show
     }
@@ -43,7 +43,7 @@ export default function VendorLoginPage() {
 
       // Save token and redirect
       localStorage.setItem("vendorToken", data.jwtToken);
-      router.push("/vendorslist");
+      router.push("/vendorlist");
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message || "Something went wrong");

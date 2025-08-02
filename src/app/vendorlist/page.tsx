@@ -106,7 +106,7 @@ export default function VendorListPage() {
 
               return (
                 <React.Fragment key={vendor.id}>
-                  <Link href={`/vendorslist/${vendor.id}`}>
+                  <Link href={`/vendorlist/${vendor.id}`}>
                     <div className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-all rounded-xl cursor-pointer">
                       <Image
                         src={profileSrc}

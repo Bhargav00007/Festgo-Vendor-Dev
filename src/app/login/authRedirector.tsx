@@ -16,7 +16,7 @@ export default function AuthRedirector() {
     }
 
     if (token && isLoginPage) {
-      router.push("/vendorslist");
+      router.push("/vendorlist");
     }
   }, [pathname, router]);
 
