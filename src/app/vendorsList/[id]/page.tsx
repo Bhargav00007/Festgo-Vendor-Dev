@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { BarLoader } from "react-spinners";
 
@@ -36,6 +36,7 @@ type Vendor = {
 
 export default function VendorPropertyPage() {
   const params = useParams();
+  const router = useRouter();
   const vendorId = params?.id as string;
 
   const [properties, setProperties] = useState<Property[]>([]);
@@ -45,11 +46,14 @@ export default function VendorPropertyPage() {
     null
   );
 
-  const token =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjM4NDc1MWEyLTI2ODEtNDVlMi1hMDkwLWQ4MzJkNjAyZmNhMSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1NDA2MzE4NywiZXhwIjoxNzU0NDk1MTg3fQ.giQIgUmoWO6QEp5Gd9yrtmdnOp8xnKPW8Xh12Mz19uc";
-
   useEffect(() => {
     const fetchData = async () => {
+      const token = localStorage.getItem("vendorToken");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
       try {
         const vendorRes = await fetch(
           "https://server.festgo.in/api/admin/vendors",
@@ -57,6 +61,13 @@ export default function VendorPropertyPage() {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
+
+        if (vendorRes.status === 401 || vendorRes.status === 403) {
+          localStorage.removeItem("vendorToken");
+          router.push("/login");
+          return;
+        }
+
         const vendorData = await vendorRes.json();
         const allVendors: Vendor[] = Array.isArray(vendorData)
           ? vendorData
@@ -73,6 +84,13 @@ export default function VendorPropertyPage() {
             },
           }
         );
+
+        if (propRes.status === 401 || propRes.status === 403) {
+          localStorage.removeItem("vendorToken");
+          router.push("/login");
+          return;
+        }
+
         const propData = await propRes.json();
         setProperties(propData?.properties || []);
       } catch (error) {
@@ -85,12 +103,15 @@ export default function VendorPropertyPage() {
     if (vendorId) {
       fetchData();
     }
-  }, [vendorId]);
+  }, [vendorId, router]);
 
   const togglePropertyStatus = async (
     propertyId: string,
     currentStatus: boolean
   ) => {
+    const token = localStorage.getItem("vendorToken");
+    if (!token) return;
+
     setUpdatingPropertyId(propertyId);
 
     const endpoint = currentStatus
@@ -145,6 +166,10 @@ export default function VendorPropertyPage() {
             width={60}
             height={60}
             className="rounded-full object-cover border"
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "/profiles/default-user.jpg";
+            }}
           />
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center w-full">
             <div>
