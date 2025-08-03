@@ -3,7 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import AuthRedirector from "../app/login/authRedirector";
-import MySidebar from "./components/Sidebar"; // Your react-pro-sidebar wrapper
+import MySidebar from "./components/Sidebar";
+
+import { CustomizerContextProvider } from "./components/shared/CustomizerContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,18 +32,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
       >
-        <AuthRedirector />
-        <Navbar />
+        <CustomizerContextProvider>
+          <AuthRedirector />
+          <Navbar />
 
-        <div className="flex min-h-screen relative">
-          {/* Sidebar (always visible and responsive) */}
-          <div className="sticky top-0 h-screen z-[9999]">
-            <MySidebar />
+          <div className="flex min-h-screen relative">
+            {/* Sidebar */}
+            <div className="sticky top-0 h-screen z-[9999]">
+              <MySidebar />
+            </div>
+
+            {/* Main Page Content */}
+            <main className="flex-1 p-4 overflow-auto">{children}</main>
           </div>
-
-          {/* Main Page Content */}
-          <main className="flex-1 p-4 overflow-auto">{children}</main>
-        </div>
+        </CustomizerContextProvider>
       </body>
     </html>
   );

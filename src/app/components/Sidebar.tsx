@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from "react";
-import { usePathname } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import {
   FaChartPie,
@@ -8,15 +8,31 @@ import {
   FaCalendarAlt,
   FaBook,
   FaBars,
+  FaUserTie,
 } from "react-icons/fa";
+import { IoBarChart } from "react-icons/io5";
 
 const SidebarMenu = () => {
   const pathname = usePathname();
+  const router = useRouter();
 
   const [toggled, setToggled] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
-  if (pathname === "/login") return null;
+  const [isClient, setIsClient] = useState(false);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (pathname === "/login" || !isClient) return null;
+
+  // Function to apply active style
+  const getMenuItemClass = (path: string) => {
+    return `hover:bg-blue-100  ${
+      pathname === path ? "bg-blue-100  font-semibold" : ""
+    }`;
+  };
+
   return (
     <div className="h-screen flex sticky top-0 z-[9999]">
       <Sidebar
@@ -38,6 +54,24 @@ const SidebarMenu = () => {
             className="hover:bg-blue-100 rounded-full"
           >
             {!collapsed && "Toggle"}
+          </MenuItem>
+
+          {/* CRM menu item */}
+          <MenuItem
+            icon={<IoBarChart />}
+            className={getMenuItemClass("/crm")}
+            onClick={() => router.push("/crm")}
+          >
+            CRM
+          </MenuItem>
+
+          {/* Vendors menu item */}
+          <MenuItem
+            icon={<FaUserTie />}
+            className={getMenuItemClass("/vendorlist")}
+            onClick={() => router.push("/vendorlist")}
+          >
+            Vendors
           </MenuItem>
 
           <SubMenu label="Charts" icon={<FaChartPie />} defaultOpen>
@@ -70,7 +104,6 @@ const SidebarMenu = () => {
         </Menu>
       </Sidebar>
 
-      {/* Toggle button only visible when sidebar is hidden */}
       {!toggled && (
         <button
           className="md:hidden p-2 text-gray-800 absolute -top-12.5 left-4 z-[10000] "
