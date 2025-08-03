@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "./components/Navbar";
-import AuthRedirector from "../app/login/authRedirector"; // Adjust path if needed
+import AuthRedirector from "../app/login/authRedirector";
+import MySidebar from "./components/Sidebar"; // Your react-pro-sidebar wrapper
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,16 +28,20 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
       >
-        {/* AuthRedirector ensures correct page routing */}
         <AuthRedirector />
-
-        {/* Navbar shows login/logout and user info */}
         <Navbar />
 
-        {/* Page Content */}
-        {children}
+        <div className="flex min-h-screen relative">
+          {/* Sidebar (always visible and responsive) */}
+          <div className="sticky top-0 h-screen z-[9999]">
+            <MySidebar />
+          </div>
+
+          {/* Main Page Content */}
+          <main className="flex-1 p-4 overflow-auto">{children}</main>
+        </div>
       </body>
     </html>
   );

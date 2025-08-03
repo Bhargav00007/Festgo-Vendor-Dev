@@ -64,8 +64,10 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="sticky top-0 flex items-center justify-between px-6 lg:px-20 py-4 bg-gray-100 shadow-sm">
-      <div className="text-xl font-bold text-blue-700">FESTGO</div>
+    <nav className=" flex items-center justify-between px-6 lg:px-20 py-4 bg-gray-100 shadow-sm">
+      <div className="text-2xl font-bold text-blue-700 ml-8 lg:ml-0">
+        FESTGO
+      </div>
       <div className="flex items-center gap-4">
         {user ? (
           <>
