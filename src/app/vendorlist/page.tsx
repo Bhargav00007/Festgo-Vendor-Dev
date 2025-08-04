@@ -91,61 +91,112 @@ export default function VendorListPage() {
     );
 
   return (
-    <div className="max-w-7xl  px-0 py-2 lg:mx-10 mx-auto">
+    <div className="max-w-7xl px-4 py-6 mx-auto">
       <div className="border border-gray-300 rounded-2xl bg-white p-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-6">Vendors</h1>
 
-        <div className="border border-gray-200 rounded-xl">
-          {vendors.length === 0 ? (
-            <p className="text-gray-600 p-4">No vendors found.</p>
-          ) : (
-            vendors.map((vendor, index) => {
-              const propertyId = vendor.property?.id;
-              const imageIndex = (index % 12) + 1;
-              const profileSrc = `/profiles/user-${imageIndex}.jpg`;
+        {/* Desktop Table View */}
+        <div className="hidden sm:block">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-100 text-gray-700 font-semibold">
+              <tr>
+                <th className="p-3">No.</th>
+                <th className="p-3">Profile</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Number</th>
+                <th className="p-3">Role</th>
+                <th className="p-3">Property ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              {vendors.map((vendor, index) => {
+                const imageIndex = (index % 12) + 1;
+                const profileSrc = `/profiles/user-${imageIndex}.jpg`;
+                const propertyId = vendor.property?.id || "N/A";
 
-              return (
-                <React.Fragment key={vendor.id}>
-                  <Link href={`/vendorlist/${vendor.id}`}>
-                    <div className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-all rounded-xl cursor-pointer">
+                return (
+                  <tr
+                    key={vendor.id}
+                    className="hover:bg-gray-50 transition-all cursor-pointer"
+                    onClick={() => router.push(`/vendorlist/${vendor.id}`)}
+                  >
+                    <td className="p-3">{index + 1}</td>
+                    <td className="p-3 flex items-center gap-3">
                       <Image
                         src={profileSrc}
-                        alt="User Profile"
-                        width={50}
-                        height={50}
+                        alt="Profile"
+                        width={40}
+                        height={40}
                         className="rounded-full border object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement;
                           target.src = "/profiles/default-user.jpg";
                         }}
                       />
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
-                        <div>
-                          <div className="text-lg font-semibold text-black">
-                            {vendor.username?.trim()
-                              ? vendor.username
-                              : "Username: n/a"}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Vendor ID: {vendor.id}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            Property ID: {propertyId || "N/A"}
-                          </div>
+                      <div>
+                        <div className="font-medium text-black">
+                          {vendor.username?.trim() || "Username: n/a"}
                         </div>
-                        <div className="hidden sm:block text-sm text-gray-500 mt-2 sm:mt-0 sm:text-right">
-                          <div>Email: {vendor.email || "n/a"}</div>
-                          <div>Number: {vendor.number || "n/a"}</div>
-                          <div>Role: {vendor.role || "n/a"}</div>
+                        <div className="text-xs text-gray-500">
+                          ID: {vendor.id}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-3">{vendor.email || "n/a"}</td>
+                    <td className="p-3">{vendor.number || "n/a"}</td>
+                    <td className="p-3">{vendor.role || "n/a"}</td>
+                    <td className="p-3">{propertyId}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile View */}
+        <div className="sm:hidden">
+          {vendors.map((vendor, index) => {
+            const imageIndex = (index % 12) + 1;
+            const profileSrc = `/profiles/user-${imageIndex}.jpg`;
+            const propertyId = vendor.property?.id || "N/A";
+
+            return (
+              <React.Fragment key={vendor.id}>
+                <Link href={`/vendorlist/${vendor.id}`}>
+                  <div className="p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Image
+                        src={profileSrc}
+                        alt="Profile"
+                        width={40}
+                        height={40}
+                        className="rounded-full border object-cover"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "/profiles/default-user.jpg";
+                        }}
+                      />
+                      <div>
+                        <div className="font-medium text-black">
+                          {vendor.username?.trim() || "Username: n/a"}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          ID: {vendor.id}
                         </div>
                       </div>
                     </div>
-                  </Link>
-                  <hr className="border-gray-200" />
-                </React.Fragment>
-              );
-            })
-          )}
+                    <div className="text-sm text-gray-700 space-y-1">
+                      <div>Email: {vendor.email || "n/a"}</div>
+                      <div>Number: {vendor.number || "n/a"}</div>
+                      <div>Role: {vendor.role || "n/a"}</div>
+                      <div>Property ID: {propertyId}</div>
+                    </div>
+                  </div>
+                </Link>
+                <hr className="border-gray-200" />
+              </React.Fragment>
+            );
+          })}
         </div>
       </div>
     </div>
