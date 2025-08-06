@@ -24,6 +24,7 @@ type Property = {
   is_completed: boolean;
   in_progress: boolean;
   photos: string[];
+  imageURL: string;
 };
 
 type Vendor = {
@@ -254,21 +255,17 @@ export default function VendorPropertyPage() {
                 </button>
               </div>
 
-              {prop.photos && prop.photos.length > 0 && (
-                <div className="mt-6">
-                  <h3 className="font-medium mb-2">Photos:</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {prop.photos.map((photo, index) => (
-                      <img
-                        key={index}
-                        src={photo}
-                        alt={`Photo ${index + 1}`}
-                        className="w-full h-40 object-cover rounded"
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+              <Image
+                src={prop.imageURL || `/profiles/user-${imageIndex}.jpg`}
+                alt="Property Image"
+                width={600}
+                height={400}
+                className="mt-4 rounded-lg object-cover w-full h-64"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = "/profiles/default-user.jpg";
+                }}
+              />
             </div>
           ))
         )}

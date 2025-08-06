@@ -44,6 +44,7 @@ export default function VendorLoginPage() {
       }
 
       localStorage.setItem("vendorToken", data.jwtToken);
+      localStorage.setItem("logindata", JSON.stringify(data));
       router.push("/vendorlist");
     } catch (err) {
       if (err instanceof Error) {

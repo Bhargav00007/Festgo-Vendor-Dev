@@ -35,13 +35,24 @@ export default function Navbar() {
   const updateUserFromToken = () => {
     const token = localStorage.getItem("vendorToken");
     if (token) {
-      const decoded = decodeJWT(token);
-      setUser(decoded);
+      const userData = localStorage.getItem("logindata");
+      if (userData) {
+        const parsedData = JSON.parse(userData);
+        setUser({
+          email: parsedData.user.email,
+          role: parsedData.user.role,
+          username: parsedData.user.username,
+          number: parsedData.user.number,
+        });
+      } else {
+        const decodedUser = decodeJWT(token);
+        setUser(decodedUser);
+      }
     } else {
       setUser(null);
     }
   };
-
+  console.log(user);
   useEffect(() => {
     updateUserFromToken();
   }, [pathname]);
