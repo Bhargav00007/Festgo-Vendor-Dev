@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { BarLoader } from "react-spinners";
 import { Icon } from "@iconify/react";
+
+type SelectedAttribute = {
+  id: number;
+  name: string;
+  value?: string | string[] | null;
+};
 
 type Amenity = {
   value: string | string[] | null;
@@ -13,7 +18,7 @@ type Amenity = {
   amenity_id: number;
   is_selected: string;
   amenity_name: string;
-  selected_attributes: any[];
+  selected_attributes: SelectedAttribute[];
   selected_sub_attributes: {
     main_attribute: number | null;
     sub_attribute_1?: string | null;
@@ -58,7 +63,7 @@ type Room = {
     category: string;
     is_selected: string;
     value?: string | string[] | null;
-    selected_attributes?: any[];
+    selected_attributes?: SelectedAttribute[];
     selected_sub_attributes?: {
       main_attribute?: number | null;
       sub_attribute_1?: string | null;
@@ -222,7 +227,9 @@ export default function PropertyDetailPage() {
 
         const propData = await propRes.json();
         const properties = propData?.properties || [];
-        const foundProperty = properties.find((p: Property) => p.id === propertyId);
+        const foundProperty = properties.find(
+          (p: Property) => p.id === propertyId
+        );
         setProperty(foundProperty || null);
       } catch (error) {
         console.error("Error fetching property details:", error);
@@ -237,17 +244,20 @@ export default function PropertyDetailPage() {
   }, [vendorId, propertyId, router]);
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
   const getAmenitiesByCategory = (category: string) => {
-    return property?.amenities.filter(amenity => 
-      amenity.category === category && amenity.is_selected === "true"
-    ) || [];
+    return (
+      property?.amenities.filter(
+        (amenity) =>
+          amenity.category === category && amenity.is_selected === "true"
+      ) || []
+    );
   };
 
   if (loading) {
@@ -265,10 +275,18 @@ export default function PropertyDetailPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="bg-white rounded-2xl shadow-xl p-8 text-center max-w-md">
-          <Icon icon="solar:home-cross-bold" width={64} className="mx-auto text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Property Not Found</h2>
-          <p className="text-gray-600 mb-6">The property you're looking for doesn't exist.</p>
-          <Link 
+          <Icon
+            icon="solar:home-cross-bold"
+            width={64}
+            className="mx-auto text-gray-400 mb-4"
+          />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Property Not Found
+          </h2>
+          <p className="text-gray-600 mb-6">
+            The property you&apos;re looking for doesn&apos;t exist.
+          </p>
+          <Link
             href={`/vendorlist/${vendorId}`}
             className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200"
           >
@@ -281,35 +299,35 @@ export default function PropertyDetailPage() {
   }
 
   const tabs = [
-    { 
-      id: "overview", 
-      label: "Overview", 
+    {
+      id: "overview",
+      label: "Overview",
       icon: "solar:home-2-bold-duotone",
-      description: "Basic property information"
+      description: "Basic property information",
     },
-    { 
-      id: "amenities", 
-      label: "Amenities", 
+    {
+      id: "amenities",
+      label: "Amenities",
       icon: "solar:widget-bold-duotone",
-      description: "Property features and services"
+      description: "Property features and services",
     },
-    { 
-      id: "rooms", 
-      label: "Rooms", 
+    {
+      id: "rooms",
+      label: "Rooms",
       icon: "solar:bed-bold-duotone",
-      description: "Room types and configurations"
+      description: "Room types and configurations",
     },
-    { 
-      id: "policies", 
-      label: "Policies", 
+    {
+      id: "policies",
+      label: "Policies",
       icon: "solar:document-text-bold-duotone",
-      description: "Rules and regulations"
+      description: "Rules and regulations",
     },
-    { 
-      id: "location", 
-      label: "Location", 
+    {
+      id: "location",
+      label: "Location",
       icon: "solar:map-point-bold-duotone",
-      description: "Address and coordinates"
+      description: "Address and coordinates",
     },
   ];
 
@@ -318,17 +336,20 @@ export default function PropertyDetailPage() {
       {/* Enhanced Header Section */}
       <div className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          
           {/* Breadcrumb Navigation */}
           <div className="mb-6">
             <nav className="flex" aria-label="Breadcrumb">
               <ol className="inline-flex items-center space-x-1 md:space-x-3">
                 <li className="inline-flex items-center">
                   <button
-                    onClick={() => router.push('/vendorlist')}
+                    onClick={() => router.push("/vendorlist")}
                     className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
                   >
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <svg
+                      className="w-4 h-4 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
                       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
                     </svg>
                     Vendors
@@ -336,23 +357,41 @@ export default function PropertyDetailPage() {
                 </li>
                 <li>
                   <div className="flex items-center">
-                    <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                    <svg
+                      className="w-6 h-6 text-gray-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clipRule="evenodd"
+                      ></path>
                     </svg>
                     <button
                       onClick={() => router.push(`/vendorlist/${vendorId}`)}
                       className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 transition-colors"
                     >
-                      {vendor?.username || 'Vendor'}
+                      {vendor?.username || "Vendor"}
                     </button>
                   </div>
                 </li>
                 <li>
                   <div className="flex items-center">
-                    <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
+                    <svg
+                      className="w-6 h-6 text-gray-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                        clipRule="evenodd"
+                      ></path>
                     </svg>
-                    <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">Property Details</span>
+                    <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                      Property Details
+                    </span>
                   </div>
                 </li>
               </ol>
@@ -365,42 +404,80 @@ export default function PropertyDetailPage() {
               <div className="flex-1">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
-                    <Icon icon="solar:home-2-bold" className="text-white" width={32} />
+                    <Icon
+                      icon="solar:home-2-bold"
+                      className="text-white"
+                      width={32}
+                    />
                   </div>
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-1">{property.name}</h1>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-1">
+                      {property.name}
+                    </h1>
                     <div className="flex flex-wrap items-center gap-4">
                       <div className="flex items-center gap-1">
-                        <Icon icon="solar:star-bold" className="text-yellow-500" width={20} />
-                        <span className="font-semibold text-gray-900">{property.star_rating}</span>
-                        <span className="text-gray-600">Star {property.property_type}</span>
+                        <Icon
+                          icon="solar:star-bold"
+                          className="text-yellow-500"
+                          width={20}
+                        />
+                        <span className="font-semibold text-gray-900">
+                          {property.star_rating}
+                        </span>
+                        <span className="text-gray-600">
+                          Star {property.property_type}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Icon icon="solar:map-point-bold" className="text-gray-400" width={16} />
-                        <span className="text-gray-600">{property.location.city}, {property.location.state}</span>
+                        <Icon
+                          icon="solar:map-point-bold"
+                          className="text-gray-400"
+                          width={16}
+                        />
+                        <span className="text-gray-600">
+                          {property.location.city}, {property.location.state}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-3">
-                  <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
-                    property.is_completed 
-                      ? 'bg-green-100 text-green-800 border border-green-200' 
-                      : 'bg-red-100 text-red-800 border border-red-200'
-                  }`}>
-                    <Icon icon={property.is_completed ? "solar:check-circle-bold" : "solar:close-circle-bold"} width={16} className="mr-1.5" />
-                    {property.is_completed ? 'Active' : 'Inactive'}
+                  <span
+                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                      property.is_completed
+                        ? "bg-green-100 text-green-800 border border-green-200"
+                        : "bg-red-100 text-red-800 border border-red-200"
+                    }`}
+                  >
+                    <Icon
+                      icon={
+                        property.is_completed
+                          ? "solar:check-circle-bold"
+                          : "solar:close-circle-bold"
+                      }
+                      width={16}
+                      className="mr-1.5"
+                    />
+                    {property.is_completed ? "Active" : "Inactive"}
                   </span>
-                  
+
                   <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                    <Icon icon="solar:chart-bold" width={16} className="mr-1.5" />
+                    <Icon
+                      icon="solar:chart-bold"
+                      width={16}
+                      className="mr-1.5"
+                    />
                     {property.status}% Complete
                   </span>
-                  
+
                   {property.channelManager && (
                     <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                      <Icon icon="solar:settings-bold" width={16} className="mr-1.5" />
+                      <Icon
+                        icon="solar:settings-bold"
+                        width={16}
+                        className="mr-1.5"
+                      />
                       {property.channelManagerName}
                     </span>
                   )}
@@ -414,11 +491,15 @@ export default function PropertyDetailPage() {
 
               <div className="flex flex-row lg:flex-col gap-4 lg:w-48">
                 <div className="bg-white rounded-xl p-4 text-center flex-1 shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-gray-900">{property.current_step}</div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {property.current_step}
+                  </div>
                   <div className="text-sm text-gray-600">Current Step</div>
                 </div>
                 <div className="bg-white rounded-xl p-4 text-center flex-1 shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-green-600">{property.status}%</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {property.status}%
+                  </div>
                   <div className="text-sm text-gray-600">Progress</div>
                 </div>
               </div>
@@ -442,16 +523,20 @@ export default function PropertyDetailPage() {
                       : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                   }`}
                 >
-                  <div className={`p-2 rounded-lg transition-all duration-200 ${
-                    activeTab === tab.id 
-                      ? "bg-blue-100 text-blue-600" 
-                      : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"
-                  }`}>
+                  <div
+                    className={`p-2 rounded-lg transition-all duration-200 ${
+                      activeTab === tab.id
+                        ? "bg-blue-100 text-blue-600"
+                        : "bg-gray-100 text-gray-400 group-hover:bg-gray-200 group-hover:text-gray-600"
+                    }`}
+                  >
                     <Icon icon={tab.icon} width={18} />
                   </div>
                   <div className="text-left">
                     <div className="font-semibold">{tab.label}</div>
-                    <div className="text-xs text-gray-500">{tab.description}</div>
+                    <div className="text-xs text-gray-500">
+                      {tab.description}
+                    </div>
                   </div>
                 </button>
               ))}
@@ -468,112 +553,142 @@ export default function PropertyDetailPage() {
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Icon icon="solar:info-circle-bold-duotone" className="text-blue-600" width={24} />
+                  <Icon
+                    icon="solar:info-circle-bold-duotone"
+                    className="text-blue-600"
+                    width={24}
+                  />
                   Property Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-500">Property Type</label>
-                    <p className="text-gray-900 capitalize font-medium">{property.property_type}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Property Type
+                    </label>
+                    <p className="text-gray-900 capitalize font-medium">
+                      {property.property_type}
+                    </p>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-500">Star Rating</label>
-                    <p className="text-gray-900 font-medium">{property.star_rating} Stars</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Star Rating
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {property.star_rating} Stars
+                    </p>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-500">Built Date</label>
-                    <p className="text-gray-900 font-medium">{formatDate(property.property_built_date)}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Built Date
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {formatDate(property.property_built_date)}
+                    </p>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-500">Accepting Bookings Since</label>
-                    <p className="text-gray-900 font-medium">{formatDate(property.accepting_bookings_since)}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Accepting Bookings Since
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {formatDate(property.accepting_bookings_since)}
+                    </p>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-500">Cuisines</label>
-                    <p className="text-gray-900 capitalize font-medium">{property.cuisines?.join(", ") || "Not specified"}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Cuisines
+                    </label>
+                    <p className="text-gray-900 capitalize font-medium">
+                      {property.cuisines?.join(", ") || "Not specified"}
+                    </p>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-500">WhatsApp Same as Mobile</label>
-                    <p className="text-gray-900 font-medium">{property.sameAsWhatsapp ? "Yes" : "No"}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      WhatsApp Same as Mobile
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {property.sameAsWhatsapp ? "Yes" : "No"}
+                    </p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                  <Icon icon="solar:document-text-bold-duotone" className="text-green-600" width={24} />
+                  <Icon
+                    icon="solar:document-text-bold-duotone"
+                    className="text-green-600"
+                    width={24}
+                  />
                   Description
                 </h3>
-                <p className="text-gray-700 leading-relaxed">{property.description}</p>
+                <p className="text-gray-700 leading-relaxed">
+                  {property.description}
+                </p>
               </div>
 
               {/* Property Photos Section */}
-              {property.photos && property.photos.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <Icon icon="solar:camera-bold-duotone" className="text-purple-600" width={24} />
-                    Property Photos ({property.photos.length})
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {property.photos.map((photo, index) => (
-                      <div key={index} className="relative group">
-                        <div className="aspect-video bg-gray-100 rounded-xl overflow-hidden border border-gray-200 hover:border-blue-300 transition-all duration-200 hover:shadow-lg">
-                          <Image
-                            src={photo}
-                            alt={`Property photo ${index + 1}`}
-                            width={400}
-                            height={300}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMDAuNSAxNTAuNUMxODguNSAxNTAuNSAxNzguNSAxNDAuNSAxNzguNSAxMjguNUMxNzguNSAxMTYuNSAxODguNSAxMDYuNSAyMDAuNSAxMDYuNUMyMTIuNSAxMDYuNSAyMjIuNSAxMTYuNSAyMjIuNSAxMjguNUMyMjIuNSAxNDAuNSAyMTIuNSAxNTAuNSAyMDAuNSAxNTAuNVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTE1NSAyMDVMMTc1IDEyNUwyMTUgMTY1TDI0NSAxMjVMMjk1IDIwNUgxNTVaIiBmaWxsPSIjOUNBM0FGIi8+Cjx0ZXh0IHg9IjIwMCIgeT0iMjQwIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjU3Mzc0IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTIiPkltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPgo=";
-                            }}
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-xl transition-all duration-200 flex items-center justify-center">
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                            <Icon icon="solar:eye-bold" className="text-white" width={24} />
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Icon icon="solar:phone-bold-duotone" className="text-indigo-600" width={24} />
+                  <Icon
+                    icon="solar:phone-bold-duotone"
+                    className="text-indigo-600"
+                    width={24}
+                  />
                   Contact Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-200">
                     <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                      <Icon icon="solar:phone-bold" className="text-green-600" width={24} />
+                      <Icon
+                        icon="solar:phone-bold"
+                        className="text-green-600"
+                        width={24}
+                      />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Mobile</label>
-                      <p className="text-gray-900 font-semibold">{property.mobile_number}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Mobile
+                      </label>
+                      <p className="text-gray-900 font-semibold">
+                        {property.mobile_number}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                     <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Icon icon="solar:phone-bold" className="text-blue-600" width={24} />
+                      <Icon
+                        icon="solar:phone-bold"
+                        className="text-blue-600"
+                        width={24}
+                      />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Landline</label>
-                      <p className="text-gray-900 font-semibold">{property.landline_number || "Not provided"}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Landline
+                      </label>
+                      <p className="text-gray-900 font-semibold">
+                        {property.landline_number || "Not provided"}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4 p-4 bg-red-50 rounded-xl border border-red-200 md:col-span-2">
                     <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-                      <Icon icon="solar:letter-bold" className="text-red-600" width={24} />
+                      <Icon
+                        icon="solar:letter-bold"
+                        className="text-red-600"
+                        width={24}
+                      />
                     </div>
                     <div>
-                      <label className="text-sm font-medium text-gray-500">Email</label>
-                      <p className="text-gray-900 font-semibold">{property.email}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Email
+                      </label>
+                      <p className="text-gray-900 font-semibold">
+                        {property.email}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -584,38 +699,58 @@ export default function PropertyDetailPage() {
             <div className="space-y-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Icon icon="solar:chart-bold-duotone" className="text-purple-600" width={24} />
+                  <Icon
+                    icon="solar:chart-bold-duotone"
+                    className="text-purple-600"
+                    width={24}
+                  />
                   Quick Stats
                 </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Completion Status</span>
+                    <span className="text-gray-600 font-medium">
+                      Completion Status
+                    </span>
                     <div className="flex items-center gap-2">
                       <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                        <div
+                          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${property.status}%` }}
                         ></div>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900">{property.status}%</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {property.status}%
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Active Status</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      property.is_completed ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {property.is_completed ? 'Active' : 'Inactive'}
+                    <span className="text-gray-600 font-medium">
+                      Active Status
+                    </span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        property.is_completed
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {property.is_completed ? "Active" : "Inactive"}
                     </span>
                   </div>
-                  
+
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">In Progress</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      property.in_progress ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {property.in_progress ? 'Yes' : 'No'}
+                    <span className="text-gray-600 font-medium">
+                      In Progress
+                    </span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        property.in_progress
+                          ? "bg-yellow-100 text-yellow-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {property.in_progress ? "Yes" : "No"}
                     </span>
                   </div>
                 </div>
@@ -624,25 +759,45 @@ export default function PropertyDetailPage() {
               {vendor && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                   <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <Icon icon="solar:user-bold-duotone" className="text-orange-600" width={24} />
+                    <Icon
+                      icon="solar:user-bold-duotone"
+                      className="text-orange-600"
+                      width={24}
+                    />
                     Vendor Information
                   </h3>
                   <div className="space-y-4">
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-sm font-medium text-gray-500">Name</label>
-                      <p className="text-gray-900 font-medium">{vendor.username || "Not provided"}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Name
+                      </label>
+                      <p className="text-gray-900 font-medium">
+                        {vendor.username || "Not provided"}
+                      </p>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-sm font-medium text-gray-500">Email</label>
-                      <p className="text-gray-900 font-medium">{vendor.email || "Not provided"}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Email
+                      </label>
+                      <p className="text-gray-900 font-medium">
+                        {vendor.email || "Not provided"}
+                      </p>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-sm font-medium text-gray-500">Phone</label>
-                      <p className="text-gray-900 font-medium">{vendor.number || "Not provided"}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Phone
+                      </label>
+                      <p className="text-gray-900 font-medium">
+                        {vendor.number || "Not provided"}
+                      </p>
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg">
-                      <label className="text-sm font-medium text-gray-500">Role</label>
-                      <p className="text-gray-900 font-medium">{vendor.role || "Not provided"}</p>
+                      <label className="text-sm font-medium text-gray-500">
+                        Role
+                      </label>
+                      <p className="text-gray-900 font-medium">
+                        {vendor.role || "Not provided"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -653,27 +808,55 @@ export default function PropertyDetailPage() {
 
         {activeTab === "amenities" && (
           <div className="space-y-8">
-            {["Mandatory", "Basic Facilities", "General Services", "Food and Drink", "Entertainment", "Health and wellness"].map((category) => {
+            {[
+              "Mandatory",
+              "Basic Facilities",
+              "General Services",
+              "Food and Drink",
+              "Entertainment",
+              "Health and wellness",
+            ].map((category) => {
               const categoryAmenities = getAmenitiesByCategory(category);
               if (categoryAmenities.length === 0) return null;
 
               return (
-                <div key={category} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div
+                  key={category}
+                  className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100"
+                >
                   <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <Icon icon="solar:widget-bold-duotone" className="text-blue-600" width={24} />
+                    <Icon
+                      icon="solar:widget-bold-duotone"
+                      className="text-blue-600"
+                      width={24}
+                    />
                     {category}
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {categoryAmenities.map((amenity) => (
-                      <div key={amenity.amenity_id} className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 hover:shadow-md transition-all duration-200">
-                        <Icon icon="solar:check-circle-bold" className="text-green-600" width={20} />
+                      <div
+                        key={amenity.amenity_id}
+                        className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200 hover:shadow-md transition-all duration-200"
+                      >
+                        <Icon
+                          icon="solar:check-circle-bold"
+                          className="text-green-600"
+                          width={20}
+                        />
                         <div className="flex-1">
-                          <p className="font-medium text-gray-900">{amenity.amenity_name}</p>
-                          {amenity.value && typeof amenity.value === 'string' && (
-                            <p className="text-sm text-gray-600">{amenity.value}</p>
-                          )}
+                          <p className="font-medium text-gray-900">
+                            {amenity.amenity_name}
+                          </p>
+                          {amenity.value &&
+                            typeof amenity.value === "string" && (
+                              <p className="text-sm text-gray-600">
+                                {amenity.value}
+                              </p>
+                            )}
                           {amenity.value && Array.isArray(amenity.value) && (
-                            <p className="text-sm text-gray-600">{amenity.value.join(", ")}</p>
+                            <p className="text-sm text-gray-600">
+                              {amenity.value.join(", ")}
+                            </p>
                           )}
                         </div>
                       </div>
@@ -688,110 +871,180 @@ export default function PropertyDetailPage() {
         {activeTab === "rooms" && (
           <div className="space-y-6">
             {property.rooms && property.rooms.length > 0 ? (
-              property.rooms.map((room, index) => (
-                <div key={room.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200">
+              property.rooms.map((room) => (
+                <div
+                  key={room.id}
+                  className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200"
+                >
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                     <div className="flex-1">
                       <div className="flex items-center gap-4 mb-6">
                         <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg">
-                          <Icon icon="solar:bed-bold" className="text-white" width={28} />
+                          <Icon
+                            icon="solar:bed-bold"
+                            className="text-white"
+                            width={28}
+                          />
                         </div>
                         <div>
-                          <h4 className="text-2xl font-bold text-gray-900">{room.room_name}</h4>
-                          <p className="text-gray-600 capitalize font-medium">{room.room_type} Room • {room.view} View</p>
+                          <h4 className="text-2xl font-bold text-gray-900">
+                            {room.room_name}
+                          </h4>
+                          <p className="text-gray-600 capitalize font-medium">
+                            {room.room_type} Room • {room.view} View
+                          </p>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                         <div className="p-3 bg-gray-50 rounded-lg">
-                          <label className="text-sm font-medium text-gray-500">Area</label>
-                          <p className="text-gray-900 font-semibold">{room.area}</p>
+                          <label className="text-sm font-medium text-gray-500">
+                            Area
+                          </label>
+                          <p className="text-gray-900 font-semibold">
+                            {room.area}
+                          </p>
                         </div>
                         <div className="p-3 bg-gray-50 rounded-lg">
-                          <label className="text-sm font-medium text-gray-500">Number of Rooms</label>
-                          <p className="text-gray-900 font-semibold">{room.number_of_rooms}</p>
+                          <label className="text-sm font-medium text-gray-500">
+                            Number of Rooms
+                          </label>
+                          <p className="text-gray-900 font-semibold">
+                            {room.number_of_rooms}
+                          </p>
                         </div>
                         <div className="p-3 bg-gray-50 rounded-lg">
-                          <label className="text-sm font-medium text-gray-500">Max Adults</label>
-                          <p className="text-gray-900 font-semibold">{room.max_adults}</p>
+                          <label className="text-sm font-medium text-gray-500">
+                            Max Adults
+                          </label>
+                          <p className="text-gray-900 font-semibold">
+                            {room.max_adults}
+                          </p>
                         </div>
                         <div className="p-3 bg-gray-50 rounded-lg">
-                          <label className="text-sm font-medium text-gray-500">Max Children</label>
-                          <p className="text-gray-900 font-semibold">{room.max_children}</p>
+                          <label className="text-sm font-medium text-gray-500">
+                            Max Children
+                          </label>
+                          <p className="text-gray-900 font-semibold">
+                            {room.max_children}
+                          </p>
                         </div>
                         <div className="p-3 bg-gray-50 rounded-lg">
-                          <label className="text-sm font-medium text-gray-500">Bathrooms</label>
-                          <p className="text-gray-900 font-semibold">{room.bathroom_available}</p>
+                          <label className="text-sm font-medium text-gray-500">
+                            Bathrooms
+                          </label>
+                          <p className="text-gray-900 font-semibold">
+                            {room.bathroom_available}
+                          </p>
                         </div>
                         <div className="p-3 bg-gray-50 rounded-lg">
-                          <label className="text-sm font-medium text-gray-500">Meal Plan</label>
-                          <p className="text-gray-900 capitalize font-semibold">{room.meal_plan.replace(/_/g, ' ')}</p>
+                          <label className="text-sm font-medium text-gray-500">
+                            Meal Plan
+                          </label>
+                          <p className="text-gray-900 capitalize font-semibold">
+                            {room.meal_plan.replace(/_/g, " ")}
+                          </p>
                         </div>
                       </div>
 
                       <div className="mb-6">
-                        <h5 className="text-lg font-semibold text-gray-900 mb-3">Sleeping Arrangement</h5>
+                        <h5 className="text-lg font-semibold text-gray-900 mb-3">
+                          Sleeping Arrangement
+                        </h5>
                         <div className="flex flex-wrap gap-3">
-                          {room.sleeping_arrangement?.beds?.map((bed, bedIndex) => (
-                            <div key={bedIndex} className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
-                              <span className="text-2xl">{bed.icon}</span>
-                              <span className="text-sm font-medium text-gray-900">
-                                {bed.quantity} {bed.bedType} bed{typeof bed.quantity === 'number' && bed.quantity > 1 ? 's' : ''}
-                              </span>
-                            </div>
-                          ))}
+                          {room.sleeping_arrangement?.beds?.map(
+                            (bed, bedIndex) => (
+                              <div
+                                key={bedIndex}
+                                className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200"
+                              >
+                                <span className="text-2xl">{bed.icon}</span>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {bed.quantity} {bed.bedType} bed
+                                  {typeof bed.quantity === "number" &&
+                                  bed.quantity > 1
+                                    ? "s"
+                                    : ""}
+                                </span>
+                              </div>
+                            )
+                          )}
                         </div>
                       </div>
 
                       <div className="mb-6">
-                        <h5 className="text-lg font-semibold text-gray-900 mb-3">Description</h5>
-                        <p className="text-gray-700 leading-relaxed">{room.description}</p>
+                        <h5 className="text-lg font-semibold text-gray-900 mb-3">
+                          Description
+                        </h5>
+                        <p className="text-gray-700 leading-relaxed">
+                          {room.description}
+                        </p>
                       </div>
 
                       <div className="mb-6">
-                        <h5 className="text-lg font-semibold text-gray-900 mb-4">Room Amenities</h5>
+                        <h5 className="text-lg font-semibold text-gray-900 mb-4">
+                          Room Amenities
+                        </h5>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {room.room_amenities?.filter(amenity => amenity.is_selected === "true").map((amenity) => (
-                            <div key={amenity.amenity_id} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                              <Icon icon="solar:check-circle-bold" className="text-green-600" width={16} />
-                              <span className="text-sm font-medium text-gray-900">{amenity.amenity_name}</span>
-                            </div>
-                          ))}
+                          {room.room_amenities
+                            ?.filter(
+                              (amenity) => amenity.is_selected === "true"
+                            )
+                            .map((amenity) => (
+                              <div
+                                key={amenity.amenity_id}
+                                className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200"
+                              >
+                                <Icon
+                                  icon="solar:check-circle-bold"
+                                  className="text-green-600"
+                                  width={16}
+                                />
+                                <span className="text-sm font-medium text-gray-900">
+                                  {amenity.amenity_name}
+                                </span>
+                              </div>
+                            ))}
                         </div>
                       </div>
 
                       {/* Room Photos */}
                       {room.photos && room.photos.length > 0 && (
                         <div className="mb-6">
-                          <h5 className="text-lg font-semibold text-gray-900 mb-4">Room Photos ({room.photos.length})</h5>
+                          <h5 className="text-lg font-semibold text-gray-900 mb-4">
+                            Room Photos ({room.photos.length})
+                          </h5>
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            {room.photos.slice(0, 6).map((photo, photoIndex) => (
-                              <div key={photoIndex} className="relative group">
-                                <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-300 transition-all duration-200 hover:shadow-md">
-                                  <Image
-                                    src={photo}
-                                    alt={`${room.room_name} photo ${photoIndex + 1}`}
-                                    width={200}
-                                    height={150}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                    onError={(e) => {
-                                      const target = e.target as HTMLImageElement;
-                                      target.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjE1MCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTUwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAuNSA3NS41Qzk0LjUgNzUuNSA4OS41IDcwLjUgODkuNSA2NC41Qzg5LjUgNTguNSA5NC41IDUzLjUgMTAwLjUgNTMuNUMxMDYuNSA1My41IDExMS41IDU4LjUgMTExLjUgNjQuNUMxMTEuNSA3MC41IDEwNi41IDc1LjUgMTAwLjUgNzUuNVoiIGZpbGw9IiM5Q0EzQUYiLz4KPHBhdGggZD0iTTc3LjUgMTAyLjVMODcuNSA2Mi41TDEwNy41IDgyLjVMMTIyLjUgNjIuNUwxNDcuNSAxMDIuNUg3Ny41WiIgZmlsbD0iIzlDQTNBRiIvPgo8dGV4dCB4PSIxMDAiIHk9IjEyMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzY1NzM3NCIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjEwIj5Sb29tIGltYWdlIG5vdCBhdmFpbGFibGU8L3RleHQ+Cjwvc3ZnPgo=";
-                                    }}
-                                  />
-                                </div>
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all duration-200 flex items-center justify-center">
-                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                                    <Icon icon="solar:eye-bold" className="text-white" width={20} />
+                            {room.photos
+                              .slice(0, 6)
+                              .map((photo, photoIndex) => (
+                                <div
+                                  key={photoIndex}
+                                  className="relative group"
+                                >
+                                  <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden border border-gray-200 hover:border-purple-300 transition-all duration-200 hover:shadow-md"></div>
+                                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-lg transition-all duration-200 flex items-center justify-center">
+                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                      <Icon
+                                        icon="solar:eye-bold"
+                                        className="text-white"
+                                        width={20}
+                                      />
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
                             {room.photos.length > 6 && (
                               <div className="aspect-video bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
                                 <div className="text-center">
-                                  <Icon icon="solar:gallery-bold" className="text-gray-400 mx-auto mb-1" width={20} />
-                                  <p className="text-xs text-gray-500">+{room.photos.length - 6} more</p>
+                                  <Icon
+                                    icon="solar:gallery-bold"
+                                    className="text-gray-400 mx-auto mb-1"
+                                    width={20}
+                                  />
+                                  <p className="text-xs text-gray-500">
+                                    +{room.photos.length - 6} more
+                                  </p>
                                 </div>
                               </div>
                             )}
@@ -803,21 +1056,33 @@ export default function PropertyDetailPage() {
                     <div className="lg:w-80">
                       <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-200">
                         <h5 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                          <Icon icon="solar:dollar-bold-duotone" className="text-green-600" width={20} />
+                          <Icon
+                            icon="solar:dollar-bold-duotone"
+                            className="text-green-600"
+                            width={20}
+                          />
                           Pricing
                         </h5>
                         <div className="space-y-3">
                           <div className="flex justify-between items-center p-3 bg-white rounded-lg">
-                            <span className="text-gray-600">Base Rate (2 Adults)</span>
-                            <span className="font-bold text-lg text-green-600">₹{room.price?.base_price_for_2_adults}</span>
+                            <span className="text-gray-600">
+                              Base Rate (2 Adults)
+                            </span>
+                            <span className="font-bold text-lg text-green-600">
+                              ₹{room.price?.base_price_for_2_adults}
+                            </span>
                           </div>
                           <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                             <span className="text-gray-600">Extra Adult</span>
-                            <span className="font-semibold text-gray-900">₹{room.price?.extra_adult_charge}</span>
+                            <span className="font-semibold text-gray-900">
+                              ₹{room.price?.extra_adult_charge}
+                            </span>
                           </div>
                           <div className="flex justify-between items-center p-3 bg-white rounded-lg">
                             <span className="text-gray-600">Child Charge</span>
-                            <span className="font-semibold text-gray-900">₹{room.price?.child_charge}</span>
+                            <span className="font-semibold text-gray-900">
+                              ₹{room.price?.child_charge}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -827,9 +1092,17 @@ export default function PropertyDetailPage() {
               ))
             ) : (
               <div className="bg-white rounded-2xl p-12 text-center shadow-sm border border-gray-100">
-                <Icon icon="solar:bed-cross-bold" width={64} className="mx-auto text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No Rooms Configured</h3>
-                <p className="text-gray-600">This property doesn't have any room configurations yet.</p>
+                <Icon
+                  icon="solar:bed-cross-bold"
+                  width={64}
+                  className="mx-auto text-gray-400 mb-4"
+                />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  No Rooms Configured
+                </h3>
+                <p className="text-gray-600">
+                  This property doesn&pos;t have any room configurations yet.
+                </p>
               </div>
             )}
           </div>
@@ -840,73 +1113,132 @@ export default function PropertyDetailPage() {
             <div className="space-y-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Icon icon="solar:clock-circle-bold-duotone" className="text-blue-600" width={24} />
+                  <Icon
+                    icon="solar:clock-circle-bold-duotone"
+                    className="text-blue-600"
+                    width={24}
+                  />
                   Check-in/Check-out
                 </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Check-in Time</span>
-                    <span className="font-semibold text-gray-900">{property.policies?.checkInTime}</span>
+                    <span className="text-gray-600 font-medium">
+                      Check-in Time
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {property.policies?.checkInTime}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Check-out Time</span>
-                    <span className="font-semibold text-gray-900">{property.policies?.checkOutTime}</span>
+                    <span className="text-gray-600 font-medium">
+                      Check-out Time
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {property.policies?.checkOutTime}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Minimum Stay</span>
-                    <span className="font-semibold text-gray-900">{property.policies?.minimumStay} night(s)</span>
+                    <span className="text-gray-600 font-medium">
+                      Minimum Stay
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {property.policies?.minimumStay} night(s)
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Maximum Stay</span>
-                    <span className="font-semibold text-gray-900">{property.policies?.maximumStay} night(s)</span>
+                    <span className="text-gray-600 font-medium">
+                      Maximum Stay
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {property.policies?.maximumStay} night(s)
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Icon icon="solar:shield-check-bold-duotone" className="text-green-600" width={24} />
+                  <Icon
+                    icon="solar:shield-check-bold-duotone"
+                    className="text-green-600"
+                    width={24}
+                  />
                   Policies
                 </h3>
                 <div className="space-y-4">
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <label className="text-sm font-medium text-gray-500">Pet Policy</label>
-                    <p className="text-gray-900 font-medium">{property.policies?.petPolicy}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Pet Policy
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {property.policies?.petPolicy}
+                    </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <label className="text-sm font-medium text-gray-500">Child Policy</label>
-                    <p className="text-gray-900 font-medium">{property.policies?.childPolicy}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Child Policy
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {property.policies?.childPolicy}
+                    </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <label className="text-sm font-medium text-gray-500">Smoking Policy</label>
-                    <p className="text-gray-900 font-medium">{property.policies?.smokingPolicy}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Smoking Policy
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {property.policies?.smokingPolicy}
+                    </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <label className="text-sm font-medium text-gray-500">Event Policy</label>
-                    <p className="text-gray-900 font-medium">{property.policies?.eventPolicy}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Event Policy
+                    </label>
+                    <p className="text-gray-900 font-medium">
+                      {property.policies?.eventPolicy}
+                    </p>
                   </div>
                   <div className="p-3 bg-gray-50 rounded-lg">
-                    <label className="text-sm font-medium text-gray-500">Cancellation Policy</label>
-                    <p className="text-gray-900 capitalize font-medium">{property.policies?.cancellationPolicy}</p>
+                    <label className="text-sm font-medium text-gray-500">
+                      Cancellation Policy
+                    </label>
+                    <p className="text-gray-900 capitalize font-medium">
+                      {property.policies?.cancellationPolicy}
+                    </p>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Icon icon="solar:document-text-bold-duotone" className="text-purple-600" width={24} />
+                  <Icon
+                    icon="solar:document-text-bold-duotone"
+                    className="text-purple-600"
+                    width={24}
+                  />
                   House Rules
                 </h3>
                 <div className="space-y-3">
                   {property.policies?.houseRules?.length > 0 ? (
                     property.policies.houseRules.map((rule, index) => (
-                      <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
-                        <Icon icon="solar:check-circle-bold" className="text-green-600" width={18} />
-                        <span className="text-gray-900 font-medium">{rule}</span>
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200"
+                      >
+                        <Icon
+                          icon="solar:check-circle-bold"
+                          className="text-green-600"
+                          width={18}
+                        />
+                        <span className="text-gray-900 font-medium">
+                          {rule}
+                        </span>
                       </div>
                     ))
                   ) : (
-                    <p className="text-gray-600 text-center py-4">No house rules specified</p>
+                    <p className="text-gray-600 text-center py-4">
+                      No house rules specified
+                    </p>
                   )}
                 </div>
               </div>
@@ -915,53 +1247,97 @@ export default function PropertyDetailPage() {
             <div className="space-y-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Icon icon="solar:dollar-bold-duotone" className="text-orange-600" width={24} />
+                  <Icon
+                    icon="solar:dollar-bold-duotone"
+                    className="text-orange-600"
+                    width={24}
+                  />
                   Fees & Deposits
                 </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
-                    <span className="text-gray-600 font-medium">Security Deposit</span>
-                    <span className="font-bold text-orange-600">₹{property.policies?.securityDeposit}</span>
+                    <span className="text-gray-600 font-medium">
+                      Security Deposit
+                    </span>
+                    <span className="font-bold text-orange-600">
+                      ₹{property.policies?.securityDeposit}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <span className="text-gray-600 font-medium">Cleaning Fee</span>
-                    <span className="font-bold text-blue-600">₹{property.policies?.cleaningFee}</span>
+                    <span className="text-gray-600 font-medium">
+                      Cleaning Fee
+                    </span>
+                    <span className="font-bold text-blue-600">
+                      ₹{property.policies?.cleaningFee}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                    <span className="text-gray-600 font-medium">Additional Guest Fee</span>
-                    <span className="font-bold text-green-600">₹{property.policies?.additionalGuestFee}</span>
+                    <span className="text-gray-600 font-medium">
+                      Additional Guest Fee
+                    </span>
+                    <span className="font-bold text-green-600">
+                      ₹{property.policies?.additionalGuestFee}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
-                    <span className="text-gray-600 font-medium">Damage Deposit</span>
-                    <span className="font-bold text-red-600">₹{property.policies?.damagePolicy?.amount}</span>
+                    <span className="text-gray-600 font-medium">
+                      Damage Deposit
+                    </span>
+                    <span className="font-bold text-red-600">
+                      ₹{property.policies?.damagePolicy?.amount}
+                    </span>
                   </div>
                 </div>
               </div>
 
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                  <Icon icon="solar:settings-bold-duotone" className="text-indigo-600" width={24} />
+                  <Icon
+                    icon="solar:settings-bold-duotone"
+                    className="text-indigo-600"
+                    width={24}
+                  />
                   Booking Settings
                 </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Instant Booking</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      property.policies?.instantBooking ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {property.policies?.instantBooking ? 'Enabled' : 'Disabled'}
+                    <span className="text-gray-600 font-medium">
+                      Instant Booking
+                    </span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        property.policies?.instantBooking
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {property.policies?.instantBooking
+                        ? "Enabled"
+                        : "Disabled"}
                     </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Advance Booking</span>
-                    <span className="font-semibold text-gray-900">{property.policies?.advanceBookingDays} days</span>
+                    <span className="text-gray-600 font-medium">
+                      Advance Booking
+                    </span>
+                    <span className="font-semibold text-gray-900">
+                      {property.policies?.advanceBookingDays} days
+                    </span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-gray-600 font-medium">Self Check-in</span>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      property.policies?.accessInstructions?.selfCheckIn ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                    }`}>
-                      {property.policies?.accessInstructions?.selfCheckIn ? 'Available' : 'Not Available'}
+                    <span className="text-gray-600 font-medium">
+                      Self Check-in
+                    </span>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        property.policies?.accessInstructions?.selfCheckIn
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}
+                    >
+                      {property.policies?.accessInstructions?.selfCheckIn
+                        ? "Available"
+                        : "Not Available"}
                     </span>
                   </div>
                 </div>
@@ -970,22 +1346,34 @@ export default function PropertyDetailPage() {
               {property.policies?.quietHours?.enabled && (
                 <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                   <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <Icon icon="solar:moon-bold-duotone" className="text-indigo-600" width={24} />
+                    <Icon
+                      icon="solar:moon-bold-duotone"
+                      className="text-indigo-600"
+                      width={24}
+                    />
                     Quiet Hours
                   </h3>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg border border-indigo-200">
                       <span className="text-gray-600 font-medium">From</span>
-                      <span className="font-semibold text-indigo-600">{property.policies.quietHours.startTime}</span>
+                      <span className="font-semibold text-indigo-600">
+                        {property.policies.quietHours.startTime}
+                      </span>
                     </div>
                     <div className="flex justify-between items-center p-3 bg-indigo-50 rounded-lg border border-indigo-200">
                       <span className="text-gray-600 font-medium">To</span>
-                      <span className="font-semibold text-indigo-600">{property.policies.quietHours.endTime}</span>
+                      <span className="font-semibold text-indigo-600">
+                        {property.policies.quietHours.endTime}
+                      </span>
                     </div>
                     {property.policies.quietHours.description && (
                       <div className="p-3 bg-gray-50 rounded-lg">
-                        <label className="text-sm font-medium text-gray-500">Description</label>
-                        <p className="text-gray-900 font-medium">{property.policies.quietHours.description}</p>
+                        <label className="text-sm font-medium text-gray-500">
+                          Description
+                        </label>
+                        <p className="text-gray-900 font-medium">
+                          {property.policies.quietHours.description}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -999,54 +1387,98 @@ export default function PropertyDetailPage() {
           <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <Icon icon="solar:map-point-bold-duotone" className="text-red-600" width={24} />
+                <Icon
+                  icon="solar:map-point-bold-duotone"
+                  className="text-red-600"
+                  width={24}
+                />
                 Address Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="text-sm font-medium text-gray-500">House Number</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.houseNumber}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    House Number
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.houseNumber}
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="text-sm font-medium text-gray-500">Locality</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.locality}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    Locality
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.locality}
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="text-sm font-medium text-gray-500">City</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.city}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    City
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.city}
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="text-sm font-medium text-gray-500">State</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.state}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    State
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.state}
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="text-sm font-medium text-gray-500">Country</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.country}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    Country
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.country}
+                  </p>
                 </div>
                 <div className="p-4 bg-gray-50 rounded-xl">
-                  <label className="text-sm font-medium text-gray-500">Pincode</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.pincode}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    Pincode
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.pincode}
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <Icon icon="solar:global-bold-duotone" className="text-blue-600" width={24} />
+                <Icon
+                  icon="solar:global-bold-duotone"
+                  className="text-blue-600"
+                  width={24}
+                />
                 Coordinates
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-                  <label className="text-sm font-medium text-gray-500">Latitude</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.lat}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    Latitude
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.lat}
+                  </p>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-xl border border-blue-200">
-                  <label className="text-sm font-medium text-gray-500">Longitude</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.lng}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    Longitude
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.lng}
+                  </p>
                 </div>
                 <div className="md:col-span-2 p-4 bg-green-50 rounded-xl border border-green-200">
-                  <label className="text-sm font-medium text-gray-500">Search Location</label>
-                  <p className="text-gray-900 font-semibold">{property.location?.searchLocation}</p>
+                  <label className="text-sm font-medium text-gray-500">
+                    Search Location
+                  </label>
+                  <p className="text-gray-900 font-semibold">
+                    {property.location?.searchLocation}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1054,18 +1486,35 @@ export default function PropertyDetailPage() {
             {/* Enhanced Map placeholder */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                <Icon icon="solar:map-bold-duotone" className="text-purple-600" width={24} />
+                <Icon
+                  icon="solar:map-bold-duotone"
+                  className="text-purple-600"
+                  width={24}
+                />
                 Interactive Map
               </h3>
               <div className="h-80 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl flex items-center justify-center border border-gray-200">
                 <div className="text-center">
-                  <Icon icon="solar:map-bold" width={64} className="mx-auto text-blue-400 mb-4" />
-                  <p className="text-lg font-semibold text-gray-700 mb-2">Map integration available here</p>
-                  <p className="text-sm text-gray-500 mb-4">Google Maps, Mapbox, or other mapping service</p>
+                  <Icon
+                    icon="solar:map-bold"
+                    width={64}
+                    className="mx-auto text-blue-400 mb-4"
+                  />
+                  <p className="text-lg font-semibold text-gray-700 mb-2">
+                    Map integration available here
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Google Maps, Mapbox, or other mapping service
+                  </p>
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm">
-                    <Icon icon="solar:global-bold" width={16} className="text-blue-600" />
+                    <Icon
+                      icon="solar:global-bold"
+                      width={16}
+                      className="text-blue-600"
+                    />
                     <span className="text-sm text-gray-700">
-                      Coordinates: {property.location?.lat}, {property.location?.lng}
+                      Coordinates: {property.location?.lat},{" "}
+                      {property.location?.lng}
                     </span>
                   </div>
                 </div>
