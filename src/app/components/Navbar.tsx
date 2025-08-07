@@ -52,7 +52,7 @@ export default function Navbar() {
       setUser(null);
     }
   };
-  console.log(user);
+
   useEffect(() => {
     updateUserFromToken();
   }, [pathname]);
@@ -83,6 +83,9 @@ export default function Navbar() {
     setUser(null);
     router.push("/login");
   };
+
+  // ❗️Hide Navbar completely on login page
+  if (pathname === "/login") return null;
 
   return (
     <nav className="flex items-center justify-between px-6 lg:px-20 py-4 bg-gray-100 shadow-sm relative">

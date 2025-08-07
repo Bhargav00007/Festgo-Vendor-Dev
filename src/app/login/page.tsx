@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { LuEye } from "react-icons/lu";
-import { LuEyeClosed } from "react-icons/lu";
+import { LuEye, LuEyeClosed } from "react-icons/lu";
+import Image from "next/image";
 
 export default function VendorLoginPage() {
   const [email, setEmail] = useState("");
@@ -60,67 +60,72 @@ export default function VendorLoginPage() {
   if (checkingAuth) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 -mt-20">
-      <form
-        onSubmit={handleLogin}
-        className="max-w-md w-full bg-white p-8 rounded-3xl shadow-sm space-y-4 border border-gray-200"
-      >
-        <h2 className="text-2xl font-bold text-center text-gray-800">
-          Sign In
-        </h2>
-
-        {error && (
-          <p className="text-red-600 text-sm text-center bg-red-50 p-2 rounded-lg">
-            {error}
-          </p>
-        )}
-
-        <input
-          type="email"
-          placeholder="Email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring"
-        />
-
-        <div className="relative">
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring pr-10"
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#e9e9e9] md:bg-white">
+      {/* Left Side - Image */}
+      <div className="md:w-1/2 w-full bg-[#e9e9e9] flex items-center justify-center md:min-h-screen">
+        <div className="w-full px-8">
+          <Image
+            src="/image.png"
+            alt="Login Illustration"
+            width={800}
+            height={800}
+            className="w-[500px] mx-auto h-auto object-contain"
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
-            aria-label="Toggle password visibility"
-          >
-            {showPassword ? <LuEyeClosed /> : <LuEye />}
-          </button>
         </div>
+      </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition cursor-pointer"
+      <div className="md:w-1/2 w-full flex items-center justify-center px-6 py-10 bg-white">
+        <form
+          onSubmit={handleLogin}
+          className="w-full max-w-md space-y-4 bg-white rounded-xl p-6 "
         >
-          {loading ? "Signing in..." : "Sign In"}
-        </button>
+          <h2 className="text-3xl font-bold text-center text-gray-800">
+            Sign In
+          </h2>
 
-        <p className="text-sm text-center text-gray-500 mt-2">
-          New to Festgo?{" "}
-          <span
-            onClick={() => router.push("/signup")}
-            className="text-blue-600 hover:underline cursor-pointer"
+          {error && (
+            <p className="text-red-600 text-sm text-center bg-red-50 p-2 rounded-lg">
+              {error}
+            </p>
+          )}
+
+          <input
+            type="email"
+            placeholder="Email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring"
+          />
+
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 cursor-pointer"
+              aria-label="Toggle password visibility"
+            >
+              {showPassword ? <LuEyeClosed /> : <LuEye />}
+            </button>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition cursor-pointer"
           >
-            Create an account
-          </span>
-        </p>
-      </form>
+            {loading ? "Signing in..." : "Sign In"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
