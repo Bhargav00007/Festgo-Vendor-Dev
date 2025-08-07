@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { BarLoader } from "react-spinners";
 import { Icon } from "@iconify/react";
+import PropertyImageGallery from "@/app/components/PropertyGallery";
 
 type SelectedAttribute = {
   id: number;
@@ -611,7 +612,10 @@ export default function PropertyDetailPage() {
                   </div>
                 </div>
               </div>
-
+              <PropertyImageGallery
+                vendorId={vendorId}
+                propertyId={propertyId}
+              />{" "}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Icon
@@ -625,9 +629,7 @@ export default function PropertyDetailPage() {
                   {property.description}
                 </p>
               </div>
-
               {/* Property Photos Section */}
-
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                   <Icon
