@@ -52,10 +52,10 @@ const SidebarMenu = () => {
   return (
     <div className="flex h-screen">
       {/* Top navbar with toggle button */}
-      <div className="fixed top-0.5 -left-1 w-full flex items-center px-4 py-2 z-[11000] ">
+      <div className=" ">
         <button
           onClick={handleToggle}
-          className="p-4 text-gray-800 hover:bg-blue-100 rounded-full  cursor-pointer"
+          className="p-2 text-gray-800 hover:bg-blue-100 rounded-full  cursor-pointer fixed top-4.5 left-5 flex items-center  z-[500]"
         >
           <FaBars className="text-xl" />
         </button>
@@ -85,6 +85,22 @@ const SidebarMenu = () => {
               Dashboard
             </MenuItem>
           </div>
+
+          <MenuItem
+            icon={<FaUserTie />}
+            className={getMenuItemClass("/fests/list")}
+            onClick={() => router.push("/fests/list")}
+          >
+            Fests List
+          </MenuItem>
+
+          <MenuItem
+            icon={<FaUserTie />}
+            className={getMenuItemClass("/fests")}
+            onClick={() => router.push("/fests")}
+          >
+            Create Fests
+          </MenuItem>
 
           <MenuItem
             icon={<FaUserTie />}
