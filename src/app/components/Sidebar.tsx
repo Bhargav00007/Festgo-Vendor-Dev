@@ -11,6 +11,8 @@ import {
   FaUserTie,
 } from "react-icons/fa";
 import { IoBarChart } from "react-icons/io5";
+import { IoTicket } from "react-icons/io5";
+import { IoCreate } from "react-icons/io5";
 
 const SidebarMenu = () => {
   const pathname = usePathname();
@@ -87,7 +89,7 @@ const SidebarMenu = () => {
           </div>
 
           <MenuItem
-            icon={<FaUserTie />}
+            icon={<IoTicket />}
             className={getMenuItemClass("/fests/list")}
             onClick={() => router.push("/fests/list")}
           >
@@ -95,7 +97,7 @@ const SidebarMenu = () => {
           </MenuItem>
 
           <MenuItem
-            icon={<FaUserTie />}
+            icon={<IoCreate />}
             className={getMenuItemClass("/fests")}
             onClick={() => router.push("/fests")}
           >
