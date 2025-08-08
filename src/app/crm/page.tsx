@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const Crm = () => {
   return (
-    <div className="p-0 sm:p-6 md:p-8">
+    <div className="p-0 sm:p-6 md:p-8 mt-20">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 col-span-12">
           <TotalVendors />

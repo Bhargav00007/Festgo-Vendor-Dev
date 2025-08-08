@@ -36,7 +36,7 @@ export default function VendorListPage() {
     );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -160,28 +160,6 @@ export default function VendorListPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Complete list of all registered vendors
                 </p>
-              </div>
-              <div className="mt-3 sm:mt-0 flex items-center space-x-3">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Search vendors..."
-                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                  <svg
-                    className="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </div>
               </div>
             </div>
           </div>

@@ -88,7 +88,7 @@ export default function Navbar() {
   if (pathname === "/login") return null;
 
   return (
-    <nav className="flex items-center justify-between px-6 lg:px-20 py-4 bg-gray-100 shadow-sm relative">
+    <nav className="fixed top-0 left-0 w-full flex items-center justify-between px-6 lg:px-20 py-4 bg-gray-100 shadow-sm z-50">
       <div className="text-2xl font-bold text-blue-700 ml-8 lg:ml-0">
         FESTGO
       </div>

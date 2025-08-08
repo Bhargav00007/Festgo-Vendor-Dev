@@ -169,7 +169,7 @@ export default function PropertyImageGallery({
         <div className="mt-4 flex justify-center">
           <button
             onClick={() => setExpanded(!expanded)}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium cursor-pointer text-gray-700 bg-white hover:bg-gray-50 "
           >
             {expanded
               ? "Show Less"
