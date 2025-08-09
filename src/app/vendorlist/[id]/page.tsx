@@ -23,7 +23,7 @@ type Property = {
   description: string;
   property_built_date: string;
   accepting_bookings_since: string;
-  is_completed: boolean;
+  active: boolean; // Changed from is_completed to active
   in_progress: boolean;
   photos: string[];
   imageURL?: string;
@@ -146,9 +146,7 @@ export default function VendorPropertyPage() {
 
       setProperties((prev) =>
         prev.map((prop) =>
-          prop.id === propertyId
-            ? { ...prop, is_completed: !currentStatus }
-            : prop
+          prop.id === propertyId ? { ...prop, active: !currentStatus } : prop
         )
       );
     } catch (error) {
@@ -280,15 +278,15 @@ export default function VendorPropertyPage() {
                 <div className="mt-6 sm:mt-0 grid grid-cols-2 gap-4 sm:gap-6">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">
-                      {properties.filter((p) => p.is_completed).length}
+                      {properties.filter((p) => p.active).length}
                     </div>
                     <div className="text-xs text-gray-500">Active</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">
-                      {properties.filter((p) => !p.is_completed).length}
+                      {properties.filter((p) => !p.active).length}
                     </div>
-                    <div className="text-xs text-gray-500">Pending</div>
+                    <div className="text-xs text-gray-500">Inactive</div>
                   </div>
                 </div>
               </div>
@@ -498,12 +496,12 @@ export default function VendorPropertyPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
                             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              prop.is_completed
+                              prop.active
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {prop.is_completed ? "Active" : "Inactive"}
+                            {prop.active ? "Active" : "Inactive"}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -534,11 +532,11 @@ export default function VendorPropertyPage() {
                             </Link>
                             <button
                               onClick={() =>
-                                togglePropertyStatus(prop.id, prop.is_completed)
+                                togglePropertyStatus(prop.id, prop.active)
                               }
                               disabled={updatingPropertyId === prop.id}
                               className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                                prop.is_completed
+                                prop.active
                                   ? "text-red-600 bg-red-50 hover:bg-red-100"
                                   : "text-green-600 bg-green-50 hover:bg-green-100"
                               } ${
@@ -556,7 +554,7 @@ export default function VendorPropertyPage() {
                               ) : (
                                 <Icon
                                   icon={
-                                    prop.is_completed
+                                    prop.active
                                       ? "solar:close-circle-bold"
                                       : "solar:check-circle-bold"
                                   }
@@ -566,7 +564,7 @@ export default function VendorPropertyPage() {
                               )}
                               {updatingPropertyId === prop.id
                                 ? "Updating..."
-                                : prop.is_completed
+                                : prop.active
                                 ? "Deactivate"
                                 : "Activate"}
                             </button>
@@ -605,12 +603,12 @@ export default function VendorPropertyPage() {
                           <div className="flex items-center gap-2 mt-2">
                             <span
                               className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                prop.is_completed
+                                prop.active
                                   ? "bg-green-100 text-green-800"
                                   : "bg-red-100 text-red-800"
                               }`}
                             >
-                              {prop.is_completed ? "Active" : "Inactive"}
+                              {prop.active ? "Active" : "Inactive"}
                             </span>
                             <span className="text-xs text-gray-500">
                               {prop.status || 0}% Complete
@@ -625,11 +623,11 @@ export default function VendorPropertyPage() {
                             </Link>
                             <button
                               onClick={() =>
-                                togglePropertyStatus(prop.id, prop.is_completed)
+                                togglePropertyStatus(prop.id, prop.active)
                               }
                               disabled={updatingPropertyId === prop.id}
                               className={`flex-1 px-3 py-2 text-sm font-medium rounded-md ${
-                                prop.is_completed
+                                prop.active
                                   ? "text-red-600 bg-red-50 hover:bg-red-100"
                                   : "text-green-600 bg-green-50 hover:bg-green-100"
                               } ${
@@ -640,7 +638,7 @@ export default function VendorPropertyPage() {
                             >
                               {updatingPropertyId === prop.id
                                 ? "Updating..."
-                                : prop.is_completed
+                                : prop.active
                                 ? "Deactivate"
                                 : "Activate"}
                             </button>
