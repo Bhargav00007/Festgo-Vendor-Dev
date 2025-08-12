@@ -133,6 +133,48 @@ export default function FestsPage() {
   return (
     <div className="max-w-5xl mx-auto lg:px-20 mt-20">
       <div className="mx-10">
+        {/* Breadcrumb Navigation */}
+        <div className="mb-6">
+          <nav className="flex" aria-label="Breadcrumb">
+            <ol className="inline-flex items-center space-x-1 md:space-x-3">
+              {/* Fest List link */}
+              <li className="inline-flex items-center">
+                <button
+                  onClick={() => router.push("/fests/list")}
+                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                  </svg>
+                  Fest List
+                </button>
+              </li>
+              {/* Create Fest */}
+              <li>
+                <div className="flex items-center">
+                  <svg
+                    className="w-6 h-6 text-gray-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                    Create Fest
+                  </span>
+                </div>
+              </li>
+            </ol>
+          </nav>
+        </div>
         <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Create Fest
         </h1>

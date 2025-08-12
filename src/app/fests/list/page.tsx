@@ -117,7 +117,7 @@ export default function FestListPage() {
       </div>
 
       {/* Grid */}
-      <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-3 lg:grid-cols-4">
         {fests.map((fest) => {
           const startDate = new Date(fest.event_start);
           const day = startDate.getDate();

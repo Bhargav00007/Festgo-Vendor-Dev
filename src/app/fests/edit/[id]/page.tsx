@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { BarLoader } from "react-spinners";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css"; // ✅ Ensure styles are loaded
 
 interface Fest {
   id: string;
@@ -33,16 +35,14 @@ export default function FestEditPage() {
       try {
         const token = localStorage.getItem("vendorToken");
         if (!token) {
-          alert("No vendor token found. Please log in again.");
+          toast.error("No vendor token found. Please log in again.");
           return;
         }
 
         const res = await fetch(
           `https://server.festgo.in/api/beach-fests/${id}`,
           {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           }
         );
 
@@ -50,10 +50,11 @@ export default function FestEditPage() {
         if (data.success && data.data) {
           setFest(data.data);
         } else {
-          alert("Failed to fetch fest details.");
+          toast.error("Failed to fetch fest details.");
         }
       } catch (error) {
         console.error("Error fetching fest:", error);
+        toast.error("Something went wrong while fetching fest data.");
       } finally {
         setLoading(false);
       }
@@ -74,7 +75,7 @@ export default function FestEditPage() {
       setSaving(true);
       const token = localStorage.getItem("vendorToken");
       if (!token) {
-        alert("No vendor token found. Please log in again.");
+        toast.error("No vendor token found. Please log in again.");
         return;
       }
 
@@ -91,13 +92,14 @@ export default function FestEditPage() {
       );
 
       if (res.ok) {
-        alert("Fest updated successfully!");
+        toast.success("Fest updated successfully!");
         router.push(`/fests/${id}`);
       } else {
-        alert("Failed to update fest.");
+        toast.error("Error updating fest!");
       }
     } catch (error) {
       console.error("Error updating fest:", error);
+      toast.error("Something went wrong while updating fest.");
     } finally {
       setSaving(false);
     }
@@ -120,16 +122,79 @@ export default function FestEditPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 mt-20 l">
+    <div className="max-w-4xl mx-auto p-6 mt-20">
+      {/* Breadcrumb */}
       <div className="mb-10">
+        <div className="mb-6">
+          <nav className="flex" aria-label="Breadcrumb">
+            <ol className="inline-flex items-center space-x-1 md:space-x-3">
+              <li className="inline-flex items-center">
+                <button
+                  onClick={() => router.push("/festlist")}
+                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                >
+                  <svg
+                    className="w-4 h-4 mr-2"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                  </svg>
+                  Fests
+                </button>
+              </li>
+              <li>
+                <div className="flex items-center">
+                  <svg
+                    className="w-6 h-6 text-gray-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <button
+                    onClick={() => router.push(`/fests/${id}`)}
+                    className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 transition-colors"
+                  >
+                    Fest
+                  </button>
+                </div>
+              </li>
+              <li>
+                <div className="flex items-center">
+                  <svg
+                    className="w-6 h-6 text-gray-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                      clipRule="evenodd"
+                    ></path>
+                  </svg>
+                  <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                    Edit Fest
+                  </span>
+                </div>
+              </li>
+            </ol>
+          </nav>
+        </div>
         <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
           Edit Fest
         </h1>
         <p className="mt-2 text-lg text-gray-600">
           Update and refine your fest details to keep everything accurate and
-          fresh{" "}
+          fresh
         </p>
       </div>
+
+      {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Fest Type */}
         <div>
@@ -319,7 +384,7 @@ export default function FestEditPage() {
           />
         </div>
 
-        {/* Submit Button */}
+        {/* Submit */}
         <button
           type="submit"
           className="bg-blue-500 text-white py-3 px-6 w-full rounded-full text-lg font-semibold hover:bg-blue-600 transition-colors"

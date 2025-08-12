@@ -4,8 +4,12 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import AuthRedirector from "../app/login/authRedirector";
 import MySidebar from "./components/Sidebar";
+import NextTopLoader from "nextjs-toploader";
 
 import { CustomizerContextProvider } from "./components/shared/CustomizerContext";
+
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,17 +38,30 @@ export default function RootLayout({
       >
         <CustomizerContextProvider>
           <AuthRedirector />
+          <NextTopLoader color="#ADD8E6" showSpinner={false} />
           <Navbar />
 
           <div className="flex min-h-screen relative">
-            {/* Sidebar */}
             <div className="sticky top-0 h-screen z-[5000]">
               <MySidebar />
             </div>
 
-            {/* Main Page Content */}
             <main className="flex-1 p-4 overflow-auto">{children}</main>
           </div>
+
+          {/* Toastify Notifications */}
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="colored"
+          />
         </CustomizerContextProvider>
       </body>
     </html>
