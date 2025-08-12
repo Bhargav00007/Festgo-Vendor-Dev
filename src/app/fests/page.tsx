@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function FestsPage() {
   const router = useRouter();
@@ -64,13 +65,27 @@ export default function FestsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setMessage("");
 
+    const totalPasses = parseInt(form.total_passes);
+    const availablePasses = parseInt(form.available_passes);
+    if (availablePasses > totalPasses) {
+      toast.error("Available passes cannot be more than total passes.");
+      return;
+    }
+
+    const startDate = new Date(form.event_start);
+    const endDate = new Date(form.event_end);
+    if (endDate < startDate) {
+      toast.error("Event end date cannot be before start date.");
+      return;
+    }
+
+    setLoading(true);
     try {
       const token = localStorage.getItem("vendorToken");
       if (!token) {
-        setMessage("❌ No vendor token found. Please log in first.");
+        toast.error("No vendor token found. Please log in first.");
         setLoading(false);
         return;
       }
@@ -81,8 +96,8 @@ export default function FestsPage() {
         ...form,
         latitude: parseFloat(form.latitude),
         longitude: parseFloat(form.longitude),
-        total_passes: parseInt(form.total_passes),
-        available_passes: parseInt(form.available_passes),
+        total_passes: totalPasses,
+        available_passes: availablePasses,
         price_per_pass: parseFloat(form.price_per_pass),
         image_urls: uploadedUrls,
         whats_included: form.whats_included
@@ -101,7 +116,7 @@ export default function FestsPage() {
 
       const data = await res.json();
       if (data.success) {
-        setMessage("✅ Fest created successfully!");
+        toast.success("Fest created successfully!");
         setForm({
           type: "",
           location: "",
@@ -118,26 +133,23 @@ export default function FestsPage() {
         });
         setImages([]);
 
-        // Redirect to /fests/list
         router.push("/fests/list");
       } else {
-        setMessage("❌ Failed to create fest: " + data.message);
+        toast.error("Failed to create fest: " + data.message);
       }
     } catch (error) {
-      setMessage("❌ Error creating fest");
+      toast.error("Error creating fest");
     }
-
     setLoading(false);
   };
 
   return (
     <div className="max-w-5xl mx-auto lg:px-20 mt-20">
-      <div className="mx-10">
+      <div className="mx-4">
         {/* Breadcrumb Navigation */}
         <div className="mb-6">
           <nav className="flex" aria-label="Breadcrumb">
             <ol className="inline-flex items-center space-x-1 md:space-x-3">
-              {/* Fest List link */}
               <li className="inline-flex items-center">
                 <button
                   onClick={() => router.push("/fests/list")}
@@ -153,7 +165,6 @@ export default function FestsPage() {
                   Fest List
                 </button>
               </li>
-              {/* Create Fest */}
               <li>
                 <div className="flex items-center">
                   <svg
@@ -179,19 +190,17 @@ export default function FestsPage() {
           Create Fest
         </h1>
         <p className="mt-2 text-lg text-gray-600">
-          Plan, publish, and showcase unforgettable fests to your audience{" "}
+          Plan, publish, and showcase unforgettable fests to your audience
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="  p-10 space-y-10 mt-5">
+      <form onSubmit={handleSubmit} className="p-5 space-y-10 mt-5">
         {/* Image Upload */}
         <div>
           <label className="block font-semibold mb-2">Upload Images</label>
-
           <div className="grid grid-cols-2 sm:flex sm:flex-row sm:items-center sm:gap-4 sm:overflow-x-auto sm:pb-2 gap-4">
-            {/* Plus Icon for Adding */}
             <label className="w-full h-32 sm:w-24 sm:h-24 flex flex-col items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-50">
-              <Plus className="w-8 h-8 text-gray-500" />
+              <Plus className="w-10 h-10 text-gray-500" />
               <input
                 type="file"
                 multiple
@@ -200,8 +209,6 @@ export default function FestsPage() {
                 className="hidden"
               />
             </label>
-
-            {/* All Images Preview */}
             {images.map((img, index) => (
               <div
                 key={index}
@@ -212,7 +219,6 @@ export default function FestsPage() {
                   alt={`Preview ${index + 1}`}
                   className="w-full h-full object-cover rounded-lg"
                 />
-                {/* Remove Button */}
                 <button
                   type="button"
                   onClick={() => handleRemoveImage(index)}
@@ -261,6 +267,7 @@ export default function FestsPage() {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg p-2"
               required
+              type="number"
             />
           </div>
           <div>
@@ -271,6 +278,7 @@ export default function FestsPage() {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg p-2"
               required
+              type="number"
             />
           </div>
         </div>
@@ -285,6 +293,7 @@ export default function FestsPage() {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg p-2"
               required
+              type="number"
             />
           </div>
           <div>
@@ -295,6 +304,7 @@ export default function FestsPage() {
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg p-2"
               required
+              type="number"
             />
           </div>
         </div>
@@ -308,6 +318,7 @@ export default function FestsPage() {
             onChange={handleChange}
             className="w-full border border-gray-300 rounded-lg p-2"
             required
+            type="number"
           />
         </div>
 

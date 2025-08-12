@@ -38,11 +38,11 @@ export default function RootLayout({
       >
         <CustomizerContextProvider>
           <AuthRedirector />
-          <NextTopLoader color="#ADD8E6" showSpinner={false} />
+          <NextTopLoader color="#1447e6" showSpinner={false} />
           <Navbar />
 
           <div className="flex min-h-screen relative">
-            <div className="sticky top-0 h-screen z-[5000]">
+            <div className="sticky top-0 h-screen z-[500]">
               <MySidebar />
             </div>
 
