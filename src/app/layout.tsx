@@ -38,7 +38,7 @@ export default function RootLayout({
 
           <div className="flex min-h-screen relative">
             {/* Sidebar */}
-            <div className="sticky top-0 h-screen z-[9999]">
+            <div className="sticky top-0 h-screen z-[5000]">
               <MySidebar />
             </div>
 

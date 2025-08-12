@@ -106,10 +106,18 @@ export default function FestListPage() {
   return (
     <div className="max-w-7xl mx-auto p-4 mt-20">
       {/* Heading */}
-      <h1 className="text-3xl font-bold mb-6 text-start">Fests</h1>
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          Fests
+        </h1>
+        <p className="mt-2 text-lg text-gray-600">
+          Browse, track, and manage all your upcoming and past fests in one
+          place{" "}
+        </p>
+      </div>
 
       {/* Grid */}
-      <div className="grid gap-6 grid-cols-1 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid gap-6 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
         {fests.map((fest) => {
           const startDate = new Date(fest.event_start);
           const day = startDate.getDate();

@@ -132,12 +132,16 @@ export default function FestsPage() {
 
   return (
     <div className="max-w-5xl mx-auto lg:px-20 mt-20">
-      <h1 className="text-3xl font-bold mb-6 text-center">Create Beach Fest</h1>
+      <div className="mx-10">
+        <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          Create Fest
+        </h1>
+        <p className="mt-2 text-lg text-gray-600">
+          Plan, publish, and showcase unforgettable fests to your audience{" "}
+        </p>
+      </div>
 
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white rounded-4xl p-10 space-y-10 shadow-sm"
-      >
+      <form onSubmit={handleSubmit} className="  p-10 space-y-10 mt-5">
         {/* Image Upload */}
         <div>
           <label className="block font-semibold mb-2">Upload Images</label>

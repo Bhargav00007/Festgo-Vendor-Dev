@@ -13,6 +13,7 @@ import {
 import { IoBarChart } from "react-icons/io5";
 import { IoTicket } from "react-icons/io5";
 import { IoCreate } from "react-icons/io5";
+import { MdFestival } from "react-icons/md";
 
 const SidebarMenu = () => {
   const pathname = usePathname();
@@ -80,32 +81,32 @@ const SidebarMenu = () => {
         <Menu>
           <div className="lg:pt-0 pt-14">
             <MenuItem
-              icon={<IoBarChart />}
+              icon={<IoBarChart size={22} />}
               className={getMenuItemClass("/crm")}
               onClick={() => router.push("/crm")}
             >
               Dashboard
             </MenuItem>
           </div>
+          <SubMenu label="Fests" icon={<MdFestival size={22} />} defaultOpen>
+            <MenuItem
+              icon={<IoTicket size={20} />}
+              className={getMenuItemClass("/fests/list")}
+              onClick={() => router.push("/fests/list")}
+            >
+              Fests List
+            </MenuItem>
 
+            <MenuItem
+              icon={<IoCreate size={20} />}
+              className={getMenuItemClass("/fests")}
+              onClick={() => router.push("/fests")}
+            >
+              Create Fests
+            </MenuItem>
+          </SubMenu>
           <MenuItem
-            icon={<IoTicket />}
-            className={getMenuItemClass("/fests/list")}
-            onClick={() => router.push("/fests/list")}
-          >
-            Fests List
-          </MenuItem>
-
-          <MenuItem
-            icon={<IoCreate />}
-            className={getMenuItemClass("/fests")}
-            onClick={() => router.push("/fests")}
-          >
-            Create Fests
-          </MenuItem>
-
-          <MenuItem
-            icon={<FaUserTie />}
+            icon={<FaUserTie size={22} />}
             className={getMenuItemClass("/vendorlist")}
             onClick={() => router.push("/vendorlist")}
           >
