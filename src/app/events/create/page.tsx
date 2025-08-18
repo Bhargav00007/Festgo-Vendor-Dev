@@ -32,7 +32,8 @@ export default function EventsPage() {
       <h1 className="text-3xl font-bold text-center mb-10">
         Choose Your Event
       </h1>
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-6">
+
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-6">
         {eventTypes.map((type, index) => (
           <div
             key={type}

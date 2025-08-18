@@ -3,7 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { MoreVertical, Edit3, Trash2, X } from "lucide-react";
+import { MoreVertical, Edit3, Trash2, X, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { BarLoader } from "react-spinners";
 
 // Types
 interface MenuType {
@@ -33,7 +35,6 @@ function Modal({
     if (open) setMounted(true);
   }, [open]);
 
-  // When transition ends and not open, unmount
   const handleAnimationEnd = () => {
     if (!open) setMounted(false);
   };
@@ -42,7 +43,7 @@ function Modal({
 
   return (
     <div
-      className={`fixed inset-0 z-500 flex items-center justify-center`}
+      className="fixed inset-0 z-500 flex items-center justify-center"
       aria-modal
       role="dialog"
       onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -85,6 +86,7 @@ function Modal({
 }
 
 export default function FestBiteMenuTypesPage() {
+  const router = useRouter();
   const [menuTypes, setMenuTypes] = useState<MenuType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [editOpen, setEditOpen] = useState(false);
@@ -205,19 +207,37 @@ export default function FestBiteMenuTypesPage() {
       <ToastContainer />
 
       {/* Heading */}
-      <div className="mb-6">
-        <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          FestBite
-        </h1>
-        <p className="mt-2 text-lg text-gray-600">
-          Where Every Bite Feels Like a Festival
-        </p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            FestBite
+          </h1>
+          <p className="mt-2 text-lg text-gray-600">
+            Where Every Bite Feels Like a Festival
+          </p>
+        </div>
+
+        {/* Create Button */}
+        <button
+          onClick={() => router.push("/festbite/create")}
+          className="hidden sm:flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700"
+        >
+          <Plus className="h-5 w-5" /> Create
+        </button>
+
+        {/* Mobile Floating Button */}
+        <button
+          onClick={() => router.push("/festbite/create")}
+          className="sm:hidden fixed bottom-6 right-6 flex items-center justify-center rounded-full bg-blue-600 w-16 h-16 text-white shadow-lg hover:bg-blue-700"
+        >
+          <Plus className="h-8 w-8" />
+        </button>
       </div>
 
       {/* Content */}
       {loading ? (
-        <div className="rounded-2xl border border-gray-200 p-8 text-center">
-          Loading menu types…
+        <div className="flex h-64 items-center justify-center">
+          <BarLoader color="#4A90E2" loading={loading} />
         </div>
       ) : menuTypes.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 p-8 text-center">
