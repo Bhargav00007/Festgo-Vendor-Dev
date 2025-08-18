@@ -246,7 +246,7 @@ export default function EventTypesPage() {
           No event types found.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4">
           {eventTypes.map((et) => (
             <div
               key={et.id}

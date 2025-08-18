@@ -244,7 +244,7 @@ export default function FestBiteMenuTypesPage() {
           No menu types found.
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
           {menuTypes.map((mt) => (
             <div
               key={mt.id}
@@ -261,7 +261,7 @@ export default function FestBiteMenuTypesPage() {
               </div>
               <button
                 onClick={() => setMenuOpen(menuOpen === mt.id ? null : mt.id)}
-                className="absolute right-2 top-2 rounded-full p-1 hover:bg-gray-100 border border-gray-200"
+                className="absolute right-2 top-2 rounded-full p-1 cursor-pointer"
               >
                 <MoreVertical className="h-5 w-5" />
               </button>
