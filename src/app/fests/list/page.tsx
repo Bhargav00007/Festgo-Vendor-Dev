@@ -104,7 +104,7 @@ export default function FestListPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 mt-20">
+    <div className="mx-auto max-w-5xl p-6 mt-20">
       {/* Heading */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">

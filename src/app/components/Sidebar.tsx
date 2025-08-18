@@ -9,6 +9,8 @@ import { MdOutlineFestival } from "react-icons/md";
 import { IoTicketOutline } from "react-icons/io5";
 import { IoCreateOutline } from "react-icons/io5";
 import { LuUsersRound } from "react-icons/lu";
+import { LuPartyPopper } from "react-icons/lu";
+import { LiaCookieBiteSolid } from "react-icons/lia";
 
 const SidebarMenu = () => {
   const pathname = usePathname();
@@ -114,6 +116,22 @@ const SidebarMenu = () => {
               Create Fests
             </MenuItem>
           </SubMenu>
+
+          <MenuItem
+            icon={<LuPartyPopper size={22} />}
+            className={getMenuItemClass("/events")}
+            component={<Link href="/events" />}
+          >
+            Events{" "}
+          </MenuItem>
+
+          <MenuItem
+            icon={<LiaCookieBiteSolid size={22} />}
+            className={getMenuItemClass("/festbite")}
+            component={<Link href="/festbite" />}
+          >
+            FestBite{" "}
+          </MenuItem>
 
           <MenuItem
             icon={<LuUsersRound size={22} />}
