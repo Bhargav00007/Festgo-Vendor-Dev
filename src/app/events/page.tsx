@@ -1,125 +1,381 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { BarLoader } from "react-spinners";
+import React, { useEffect, useMemo, useState } from "react";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { MoreVertical, Edit3, Trash2, X, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
+import { BarLoader } from "react-spinners";
 
-type EventType = {
+// Types
+interface EventType {
   id: string;
   name: string;
   imageUrl: string;
-  createdAt: string;
-  updatedAt: string;
-};
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Reusable Modal
+function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  actionArea,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children?: React.ReactNode;
+  actionArea?: React.ReactNode;
+}) {
+  const [mounted, setMounted] = useState(open);
+
+  useEffect(() => {
+    if (open) setMounted(true);
+  }, [open]);
+
+  const handleAnimationEnd = () => {
+    if (!open) setMounted(false);
+  };
+
+  if (!mounted) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-500 flex items-center justify-center"
+      aria-modal
+      role="dialog"
+      onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === "Escape") onClose();
+      }}
+    >
+      {/* Backdrop */}
+      <div
+        className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${
+          open ? "opacity-100" : "opacity-0"
+        }`}
+        onClick={onClose}
+      />
+
+      {/* Panel */}
+      <div
+        className={`relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl transition-all duration-200 border border-gray-200 ${
+          open
+            ? "scale-100 opacity-100 translate-y-0"
+            : "scale-95 opacity-0 translate-y-1"
+        }`}
+        onTransitionEnd={handleAnimationEnd}
+      >
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <h3 className="text-xl font-semibold">{title}</h3>
+          <button
+            onClick={onClose}
+            className="rounded-full p-1 hover:bg-gray-100 border border-gray-200"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="mb-4">{children}</div>
+        {actionArea && (
+          <div className="mt-2 flex justify-end gap-2">{actionArea}</div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function EventTypesPage() {
   const router = useRouter();
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [current, setCurrent] = useState<EventType | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
+
+  const token = useMemo(
+    () =>
+      typeof window !== "undefined"
+        ? localStorage.getItem("vendorToken")
+        : null,
+    []
+  );
+
+  const fetchEventTypes = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(
+        "https://server.festgo.in/api/events/event-types",
+        {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          cache: "no-store",
+        }
+      );
+      if (!res.ok) throw new Error("Failed to fetch event types");
+      const data: unknown = await res.json();
+      setEventTypes(Array.isArray(data) ? (data as EventType[]) : []);
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Error fetching event types");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchEventTypes = async () => {
-      try {
-        const token = localStorage.getItem("vendorToken");
-        if (!token) {
-          setError("No token found. Please login first.");
-          setLoading(false);
-          return;
-        }
-
-        const res = await fetch(
-          "https://server.festgo.in/api/events/event-types",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error(`Failed to fetch: ${res.status}`);
-        }
-
-        const data = (await res.json()) as EventType[];
-        console.log("Fetched Event Types:", data);
-
-        setEventTypes(data);
-      } catch (err: unknown) {
-        const message =
-          err instanceof Error ? err.message : "Something went wrong.";
-        setError(message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchEventTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <BarLoader color="#3b82f6" />
-      </div>
-    );
-  }
+  const openEdit = (et: EventType) => {
+    setCurrent(et);
+    setEditValue(et.name || "");
+    setEditOpen(true);
+    setMenuOpen(null);
+  };
 
-  if (error) {
-    return (
-      <div className="p-6 text-center text-red-500 font-semibold">{error}</div>
-    );
-  }
+  const openDelete = (et: EventType) => {
+    setCurrent(et);
+    setDeleteOpen(true);
+    setMenuOpen(null);
+  };
+
+  const handleEditSave = async () => {
+    if (!current) return;
+    if (!editValue.trim())
+      return toast.error("Event type name cannot be empty");
+    try {
+      const res = await fetch(
+        `https://server.festgo.in/api/events/event-types/${current.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify({ name: editValue.trim() }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to update event type");
+      toast.success("Event type updated");
+      setEditOpen(false);
+      setCurrent(null);
+      await fetchEventTypes();
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Error updating event type");
+      }
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!current) return;
+    try {
+      const res = await fetch(
+        `https://server.festgo.in/api/events/event-types/${current.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to delete event type");
+      toast.success("Event type deleted");
+      setDeleteOpen(false);
+      setCurrent(null);
+      await fetchEventTypes();
+    } catch (err) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Error deleting event type");
+      }
+    }
+  };
 
   return (
     <div className="mx-auto max-w-5xl p-6 mt-20">
-      {/* Heading + Button Row */}
-      <div className="flex items-center justify-between mb-2">
-        <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-          Event Types
-        </h1>
+      <ToastContainer />
 
-        {/* Desktop Button (right side) */}
+      {/* Heading */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Event Types
+          </h1>
+          <p className="mt-2 text-lg text-gray-600">
+            Celebrate Diversity, Discover Every Event
+          </p>
+        </div>
+
+        {/* Create Button */}
         <button
           onClick={() => router.push("/events/createmenu")}
-          className="hidden sm:flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700"
+          className="hidden sm:flex items-center gap-2 rounded-full bg-purple-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-purple-700"
         >
           <Plus className="h-5 w-5" /> Create
         </button>
+
+        {/* Mobile Floating Button */}
+        <button
+          onClick={() => router.push("/events/createmenu")}
+          className="sm:hidden fixed bottom-6 z-100 right-6 flex items-center justify-center rounded-full bg-purple-600 w-16 h-16 text-white shadow-lg hover:bg-purple-700"
+        >
+          <Plus className="h-8 w-8" />
+        </button>
       </div>
 
-      {/* Tagline under heading */}
-      <p className="mb-6 text-lg text-gray-600">
-        Celebrate Diversity, Discover Every Event
-      </p>
+      {/* Content */}
+      {loading ? (
+        <div className="flex h-64 items-center justify-center">
+          <BarLoader color="#A855F7" loading={loading} />
+        </div>
+      ) : eventTypes.length === 0 ? (
+        <div className="rounded-2xl border border-gray-200 p-8 text-center">
+          No event types found.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          {eventTypes.map((et) => (
+            <div
+              key={et.id}
+              className="relative flex h-60 flex-col justify-between rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md"
+            >
+              {/* Event Image */}
+              <div className="w-full h-full rounded-xl overflow-hidden bg-gray-100">
+                {et.imageUrl ? (
+                  <img
+                    src={et.imageUrl}
+                    alt={et.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-gray-400">
+                    No Image
+                  </div>
+                )}
+              </div>
 
-      {/* Mobile Floating Button */}
-      <button
-        onClick={() => router.push("/events/createmenu")}
-        className="sm:hidden fixed bottom-6 right-6 flex items-center justify-center rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-700"
-      >
-        <Plus className="h-8 w-8" />
-      </button>
+              {/* Event Name + Dropdown */}
+              <div className="px-4 pb-2 flex items-center justify-between">
+                <div>
+                  <div className="mt-2 text-lg font-semibold leading-snug text-gray-800">
+                    {et.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Created:{" "}
+                    {et.createdAt
+                      ? new Date(et.createdAt).toLocaleDateString()
+                      : "-"}
+                  </div>
+                </div>
 
-      {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {eventTypes.map((event) => (
-          <div key={event.id} className="flex flex-col items-center">
-            <div className="w-full h-full rounded-4xl overflow-hidden shadow-md">
-              <img
-                src={event.imageUrl}
-                alt={event.name}
-                className="w-full h-full object-cover"
-              />
+                <div className="relative">
+                  <button
+                    onClick={() =>
+                      setMenuOpen(menuOpen === et.id ? null : et.id)
+                    }
+                    className="rounded-full p-1 cursor-pointer"
+                  >
+                    <MoreVertical className="h-5 w-5" />
+                  </button>
+                  {menuOpen === et.id && (
+                    <div className="absolute right-0 -top-20 z-10 w-32 rounded-lg border border-gray-200 bg-white shadow-md">
+                      <button
+                        onClick={() => openEdit(et)}
+                        className="flex w-full items-center rounded-lg gap-2 px-3 py-2 text-left text-sm hover:bg-purple-50 cursor-pointer"
+                      >
+                        <Edit3 className="h-4 w-4 text-purple-600" /> Edit
+                      </button>
+                      <button
+                        onClick={() => openDelete(et)}
+                        className="flex w-full items-center rounded-lg gap-2 px-3 py-2 text-left text-sm hover:bg-red-50 cursor-pointer"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-600" /> Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <p className="mt-3 text-lg font-medium text-gray-700 text-center">
-              {event.name}
-            </p>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {/* Edit Dialog */}
+      <Modal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title={`Edit Event Type${current ? ` — ${current.name}` : ""}`}
+        actionArea={
+          <>
+            <button
+              onClick={() => setEditOpen(false)}
+              className="rounded-xl border border-gray-200 px-4 py-2 text-sm hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleEditSave}
+              className="rounded-xl bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700"
+            >
+              Save
+            </button>
+          </>
+        }
+      >
+        <label className="block text-sm font-medium text-gray-700">
+          Event Type Name
+        </label>
+        <input
+          value={editValue}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setEditValue(e.target.value)
+          }
+          placeholder="Enter event type name"
+          className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500"
+        />
+      </Modal>
+
+      {/* Delete Confirmation Dialog */}
+      <Modal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Delete Event Type"
+        actionArea={
+          <>
+            <button
+              onClick={() => setDeleteOpen(false)}
+              className="rounded-xl border border-gray-200 px-4 py-2 text-sm hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              className="rounded-xl bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </>
+        }
+      >
+        <p>
+          Are you sure you want to delete{" "}
+          <span className="font-semibold">{current?.name}</span>? This action
+          cannot be undone.
+        </p>
+      </Modal>
     </div>
   );
 }
