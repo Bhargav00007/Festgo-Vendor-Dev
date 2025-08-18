@@ -83,7 +83,7 @@ export default function EventTypesPage() {
 
         {/* Desktop Button (right side) */}
         <button
-          onClick={() => router.push("/events/create")}
+          onClick={() => router.push("/events/createmenu")}
           className="hidden sm:flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700"
         >
           <Plus className="h-5 w-5" /> Create
@@ -97,7 +97,7 @@ export default function EventTypesPage() {
 
       {/* Mobile Floating Button */}
       <button
-        onClick={() => router.push("/events/create")}
+        onClick={() => router.push("/events/createmenu")}
         className="sm:hidden fixed bottom-6 right-6 flex items-center justify-center rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-700"
       >
         <Plus className="h-8 w-8" />
