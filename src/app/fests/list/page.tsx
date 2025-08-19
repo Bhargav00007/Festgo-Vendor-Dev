@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { BarLoader } from "react-spinners";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Fest {
   id: string;
@@ -26,6 +28,7 @@ export default function FestListPage() {
   const [fests, setFests] = useState<Fest[]>([]);
   const [loading, setLoading] = useState(true);
   const [textColors, setTextColors] = useState<Record<string, string>>({});
+  const router = useRouter();
 
   // Fetch all fests
   useEffect(() => {
@@ -104,16 +107,37 @@ export default function FestListPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-6 mt-20">
+    <div className="mx-auto max-w-5xl p-6 my-20">
       {/* Heading */}
       <div className="mb-10">
-        <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Fests
-        </h1>
-        <p className="mt-2 text-lg text-gray-600">
-          Browse, track, and manage all your upcoming and past fests in one
-          place{" "}
-        </p>
+        {/* Top bar with heading and create button */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              Beach Fests
+            </h1>
+            <p className="mt-2 text-lg text-gray-600">
+              Browse, track, and manage all your upcoming and past fests in one
+              place{" "}
+            </p>
+          </div>
+
+          {/* Desktop create button */}
+          <button
+            onClick={() => router.push("/fests")}
+            className="hidden sm:flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700"
+          >
+            <Plus className="h-5 w-5" /> Create
+          </button>
+        </div>
+
+        {/* Mobile floating button */}
+        <button
+          onClick={() => router.push("/fests")}
+          className="sm:hidden fixed bottom-6 right-6 z-10 flex items-center justify-center rounded-full bg-blue-600 w-16 h-16 text-white shadow-lg hover:bg-blue-700"
+        >
+          <Plus className="h-8 w-8" />
+        </button>
       </div>
 
       {/* Grid */}

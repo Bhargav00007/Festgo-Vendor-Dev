@@ -105,15 +105,7 @@ const SidebarMenu = () => {
               className={getMenuItemClass("/fests/list")}
               component={<Link href="/fests/list" />}
             >
-              Fests List
-            </MenuItem>
-
-            <MenuItem
-              icon={<IoCreateOutline size={20} />}
-              className={getMenuItemClass("/fests")}
-              component={<Link href="/fests" />}
-            >
-              Create Fests
+              Beach fest
             </MenuItem>
           </SubMenu>
 
