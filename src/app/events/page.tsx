@@ -90,11 +90,16 @@ export default function EventTypesPage() {
   const router = useRouter();
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Modals & States
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [current, setCurrent] = useState<EventType | null>(null);
   const [editValue, setEditValue] = useState<string>("");
+  const [editImage, setEditImage] = useState<File | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
 
   const token = useMemo(
     () =>
@@ -104,6 +109,7 @@ export default function EventTypesPage() {
     []
   );
 
+  // Fetch Event Types
   const fetchEventTypes = async () => {
     try {
       setLoading(true);
@@ -135,9 +141,12 @@ export default function EventTypesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Handlers
   const openEdit = (et: EventType) => {
     setCurrent(et);
     setEditValue(et.name || "");
+    setPreviewImage(et.imageUrl || null);
+    setEditImage(null);
     setEditOpen(true);
     setMenuOpen(null);
   };
@@ -148,11 +157,44 @@ export default function EventTypesPage() {
     setMenuOpen(null);
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setEditImage(file);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch("https://server.festgo.in/api/upload/public", {
+      method: "POST",
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+      body: formData,
+    });
+
+    if (!res.ok) throw new Error("Image upload failed");
+    const data = await res.json();
+    return data.url; // assuming backend returns { url: "https://..." }
+  };
+
   const handleEditSave = async () => {
     if (!current) return;
     if (!editValue.trim())
       return toast.error("Event type name cannot be empty");
+
     try {
+      setUploading(true);
+
+      let imageUrl = current.imageUrl;
+      if (editImage) {
+        imageUrl = await uploadImage(editImage);
+      }
+
       const res = await fetch(
         `https://server.festgo.in/api/events/event-types/${current.id}`,
         {
@@ -161,13 +203,20 @@ export default function EventTypesPage() {
             "Content-Type": "application/json",
             Authorization: token ? `Bearer ${token}` : "",
           },
-          body: JSON.stringify({ name: editValue.trim() }),
+          body: JSON.stringify({
+            name: editValue.trim(),
+            imageUrl,
+          }),
         }
       );
+
       if (!res.ok) throw new Error("Failed to update event type");
+
       toast.success("Event type updated");
       setEditOpen(false);
       setCurrent(null);
+      setPreviewImage(null);
+      setEditImage(null);
       await fetchEventTypes();
     } catch (err) {
       if (err instanceof Error) {
@@ -175,6 +224,8 @@ export default function EventTypesPage() {
       } else {
         toast.error("Error updating event type");
       }
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -205,7 +256,7 @@ export default function EventTypesPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl p-6 mt-20">
+    <div className="mx-auto max-w-5xl p-6 my-20">
       <ToastContainer />
 
       {/* Heading */}
@@ -230,7 +281,7 @@ export default function EventTypesPage() {
         {/* Mobile Floating Button */}
         <button
           onClick={() => router.push("/events/createmenu")}
-          className="sm:hidden fixed bottom-6 z-100 right-6 flex items-center justify-center rounded-full bg-purple-600 w-16 h-16 text-white shadow-lg hover:bg-purple-700"
+          className="sm:hidden fixed bottom-6 z-50 right-6 flex items-center justify-center rounded-full bg-purple-600 w-16 h-16 text-white shadow-lg hover:bg-purple-700"
         >
           <Plus className="h-8 w-8" />
         </button>
@@ -250,7 +301,8 @@ export default function EventTypesPage() {
           {eventTypes.map((et) => (
             <div
               key={et.id}
-              className="relative flex h-60 flex-col justify-between rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md"
+              onClick={() => router.push(`/events/${et.id}`)}
+              className="relative flex h-60 flex-col justify-between rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md cursor-pointer"
             >
               {/* Event Image */}
               <div className="w-full h-full rounded-xl overflow-hidden bg-gray-100">
@@ -283,9 +335,10 @@ export default function EventTypesPage() {
 
                 <div className="relative">
                   <button
-                    onClick={() =>
-                      setMenuOpen(menuOpen === et.id ? null : et.id)
-                    }
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(menuOpen === et.id ? null : et.id);
+                    }}
                     className="rounded-full p-1 cursor-pointer"
                   >
                     <MoreVertical className="h-5 w-5" />
@@ -293,13 +346,19 @@ export default function EventTypesPage() {
                   {menuOpen === et.id && (
                     <div className="absolute right-0 -top-20 z-10 w-32 rounded-lg border border-gray-200 bg-white shadow-md">
                       <button
-                        onClick={() => openEdit(et)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEdit(et);
+                        }}
                         className="flex w-full items-center rounded-lg gap-2 px-3 py-2 text-left text-sm hover:bg-purple-50 cursor-pointer"
                       >
                         <Edit3 className="h-4 w-4 text-purple-600" /> Edit
                       </button>
                       <button
-                        onClick={() => openDelete(et)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openDelete(et);
+                        }}
                         className="flex w-full items-center rounded-lg gap-2 px-3 py-2 text-left text-sm hover:bg-red-50 cursor-pointer"
                       >
                         <Trash2 className="h-4 w-4 text-red-600" /> Delete
@@ -328,24 +387,60 @@ export default function EventTypesPage() {
             </button>
             <button
               onClick={handleEditSave}
-              className="rounded-xl bg-purple-600 px-4 py-2 text-sm text-white hover:bg-purple-700"
+              disabled={uploading}
+              className="rounded-xl bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50"
             >
-              Save
+              {uploading ? "Saving..." : "Save"}
             </button>
           </>
         }
       >
+        {/* Name */}
         <label className="block text-sm font-medium text-gray-700">
           Event Type Name
         </label>
         <input
           value={editValue}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setEditValue(e.target.value)
-          }
+          onChange={(e) => setEditValue(e.target.value)}
           placeholder="Enter event type name"
-          className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500"
+          className="mt-1 mb-4 w-full rounded-xl border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
         />
+
+        {/* Image Upload Area */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Image
+          </label>
+
+          {/* Preview if exists */}
+          {previewImage && (
+            <div className="mb-3">
+              <img
+                src={previewImage}
+                alt="Preview"
+                className="w-32 h-32 object-cover rounded-lg"
+              />
+            </div>
+          )}
+
+          {/* Dotted Drop Area */}
+          <label
+            htmlFor="editImageInput"
+            className="flex flex-col items-center justify-center gap-2 w-full h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 transition cursor-pointer"
+          >
+            <Plus className="w-6 h-6" />
+            <span className="text-sm text-gray-600">
+              {uploading ? "Uploading..." : "Click to upload image"}
+            </span>
+          </label>
+          <input
+            id="editImageInput"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="hidden"
+          />
+        </div>
       </Modal>
 
       {/* Delete Confirmation Dialog */}

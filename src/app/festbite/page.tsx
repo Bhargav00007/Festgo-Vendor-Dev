@@ -188,7 +188,7 @@ export default function FestBiteMenuTypesPage() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl p-6 mt-20">
+    <div className="mx-auto max-w-5xl p-6 my-20">
       <ToastContainer />
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -248,15 +248,22 @@ export default function FestBiteMenuTypesPage() {
                 <MoreVertical className="h-5 w-5" />
               </button>
               {menuOpen === mt.id && (
-                <div className="absolute right-2 top-10 z-10 w-32 rounded-lg border border-gray-200 bg-white shadow-md">
+                <div className="absolute right-2 top-8 z-100 w-32 rounded-lg border border-gray-200 bg-white shadow-md">
                   <button
-                    onClick={() => openEdit(mt)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEdit(mt);
+                    }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-blue-50"
                   >
                     <Edit3 className="h-4 w-4 text-blue-600" /> Edit
                   </button>
+
                   <button
-                    onClick={() => openDelete(mt)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openDelete(mt);
+                    }}
                     className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4 text-red-600" /> Delete
@@ -267,6 +274,65 @@ export default function FestBiteMenuTypesPage() {
           ))}
         </div>
       )}
+
+      {/* Edit Modal */}
+      <Modal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        title="Edit Menu Type"
+        actionArea={
+          <>
+            <button
+              onClick={() => setEditOpen(false)}
+              className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleEditSave}
+              className="rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold hover:bg-blue-700"
+            >
+              Save
+            </button>
+          </>
+        }
+      >
+        <input
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          className="w-full rounded-lg border border-gray-300 px-3 py-2"
+          placeholder="Enter menu type name"
+        />
+      </Modal>
+
+      {/* Delete Modal */}
+      <Modal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        title="Delete Menu Type"
+        actionArea={
+          <>
+            <button
+              onClick={() => setDeleteOpen(false)}
+              className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              className="rounded-lg bg-red-600 px-4 py-2 text-white font-semibold hover:bg-red-700"
+            >
+              Delete
+            </button>
+          </>
+        }
+      >
+        <p>
+          Are you sure you want to delete{" "}
+          <span className="font-semibold">{current?.typeName}</span>?
+        </p>
+      </Modal>
     </div>
   );
 }
