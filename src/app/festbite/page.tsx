@@ -233,7 +233,6 @@ export default function FestBiteMenuTypesPage() {
                 {mt.typeName}
               </div>
               <div className="text-xs text-gray-500">
-                Created:{" "}
                 {mt.createdAt
                   ? new Date(mt.createdAt).toLocaleDateString()
                   : "-"}
@@ -243,33 +242,39 @@ export default function FestBiteMenuTypesPage() {
                   e.stopPropagation();
                   setMenuOpen(menuOpen === mt.id ? null : mt.id);
                 }}
-                className="absolute right-2 top-2 rounded-full p-1 cursor-pointer"
+                className="absolute right-2 bottom-3 rounded-full p-1 cursor-pointer"
               >
                 <MoreVertical className="h-5 w-5" />
               </button>
-              {menuOpen === mt.id && (
-                <div className="absolute right-2 top-8 z-100 w-32 rounded-lg border border-gray-200 bg-white shadow-md">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEdit(mt);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-blue-50"
-                  >
-                    <Edit3 className="h-4 w-4 text-blue-600" /> Edit
-                  </button>
+              <div
+                className={`absolute right-2 top-38 z-100 w-32 rounded-lg border border-gray-200 bg-white shadow-md transform transition-all duration-200 origin-top
+    ${
+      menuOpen === mt.id
+        ? "opacity-100 scale-100"
+        : "opacity-0 scale-95 pointer-events-none"
+    }
+  `}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openEdit(mt);
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-blue-50"
+                >
+                  <Edit3 className="h-4 w-4 text-blue-600" /> Edit
+                </button>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDelete(mt);
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-red-50"
-                  >
-                    <Trash2 className="h-4 w-4 text-red-600" /> Delete
-                  </button>
-                </div>
-              )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openDelete(mt);
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 text-red-600" /> Delete
+                </button>
+              </div>
             </div>
           ))}
         </div>

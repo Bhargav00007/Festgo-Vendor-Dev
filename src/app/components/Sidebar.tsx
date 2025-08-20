@@ -6,8 +6,7 @@ import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import { FaBars } from "react-icons/fa";
 import { VscGraph } from "react-icons/vsc";
 import { MdOutlineFestival } from "react-icons/md";
-import { IoTicketOutline } from "react-icons/io5";
-import { IoCreateOutline } from "react-icons/io5";
+import { FaUmbrellaBeach } from "react-icons/fa6";
 import { LuUsersRound } from "react-icons/lu";
 import { LuPartyPopper } from "react-icons/lu";
 import { LiaCookieBiteSolid } from "react-icons/lia";
@@ -101,7 +100,7 @@ const SidebarMenu = () => {
             defaultOpen
           >
             <MenuItem
-              icon={<IoTicketOutline size={20} />}
+              icon={<FaUmbrellaBeach size={20} />}
               className={getMenuItemClass("/fests/list")}
               component={<Link href="/fests/list" />}
             >

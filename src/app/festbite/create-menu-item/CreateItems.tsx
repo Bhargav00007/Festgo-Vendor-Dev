@@ -142,7 +142,7 @@ export default function CreateItem() {
           </ol>
         </nav>
       </div>
-      <h1 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+      <h1 className="text-3xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
         Create FestBite Menu Item
       </h1>
       <p className="mb-6 text-gray-600 text-base">
@@ -158,7 +158,7 @@ export default function CreateItem() {
             value={itemName}
             onChange={(e) => setItemName(e.target.value)}
             placeholder="e.g. Paneer Biryani"
-            className="w-lg px-3 py-1.5 border border-gray-300 rounded-md text-sm"
+            className="w-full max-w-lg px-3 py-2 text-sm border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
         </div>
 
@@ -169,7 +169,7 @@ export default function CreateItem() {
             type="text"
             value={menuTypeId}
             disabled
-            className="w-lg px-3 py-1.5 border border-gray-300 rounded-md text-sm bg-gray-100"
+            className="w-full max-w-lg px-3 py-2 text-sm border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
         </div>
 
@@ -192,7 +192,7 @@ export default function CreateItem() {
             <img
               src={preview}
               alt="Preview"
-              className="mt-3 w-24 h-24 object-cover rounded-md border"
+              className="mt-3 w-24 h-24 object-cover rounded-md"
             />
           )}
         </div>
@@ -200,7 +200,7 @@ export default function CreateItem() {
         <button
           type="submit"
           disabled={loading}
-          className="w-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold py-3 px-3 rounded-full shadow hover:opacity-90 disabled:opacity-50"
+          className="w-full max-w-lg text-sm bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold py-2 px-4 rounded-full shadow-md hover:opacity-90 disabled:opacity-50"
         >
           {loading ? "Creating..." : "Create Menu Item"}
         </button>
