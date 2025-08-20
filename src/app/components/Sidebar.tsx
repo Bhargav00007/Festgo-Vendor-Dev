@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import { FaBars } from "react-icons/fa";
 import { VscGraph } from "react-icons/vsc";
-import { MdOutlineFestival } from "react-icons/md";
 import { FaUmbrellaBeach } from "react-icons/fa6";
 import { LuUsersRound } from "react-icons/lu";
 import { LuPartyPopper } from "react-icons/lu";
@@ -94,19 +93,13 @@ const SidebarMenu = () => {
             </MenuItem>
           </div>
 
-          <SubMenu
-            label="Fests"
-            icon={<MdOutlineFestival size={22} />}
-            defaultOpen
+          <MenuItem
+            icon={<FaUmbrellaBeach size={20} />}
+            className={getMenuItemClass("/fests/list")}
+            component={<Link href="/fests/list" />}
           >
-            <MenuItem
-              icon={<FaUmbrellaBeach size={20} />}
-              className={getMenuItemClass("/fests/list")}
-              component={<Link href="/fests/list" />}
-            >
-              Beach fest
-            </MenuItem>
-          </SubMenu>
+            Beach fest
+          </MenuItem>
 
           <MenuItem
             icon={<LuPartyPopper size={22} />}

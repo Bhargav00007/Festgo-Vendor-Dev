@@ -163,7 +163,7 @@ export default function CreateItem() {
         </div>
 
         {/* Menu Type ID */}
-        <div>
+        <div className="hidden">
           <label className="block text-sm font-medium mb-1">Menu Type ID</label>
           <input
             type="text"
@@ -206,7 +206,12 @@ export default function CreateItem() {
         </button>
       </form>
 
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        draggable
+        closeOnClick
+      />
     </div>
   );
 }
