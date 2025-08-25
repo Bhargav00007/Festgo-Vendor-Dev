@@ -9,6 +9,7 @@ import { FaUmbrellaBeach } from "react-icons/fa6";
 import { LuUsersRound } from "react-icons/lu";
 import { LuPartyPopper } from "react-icons/lu";
 import { LiaCookieBiteSolid } from "react-icons/lia";
+import { LuBuilding2 } from "react-icons/lu";
 
 const SidebarMenu = () => {
   const pathname = usePathname();
@@ -98,7 +99,15 @@ const SidebarMenu = () => {
             className={getMenuItemClass("/fests/list")}
             component={<Link href="/fests/list" />}
           >
-            Beach fest
+            Beach Fest
+          </MenuItem>
+
+          <MenuItem
+            icon={<LuBuilding2 size={22} />}
+            className={getMenuItemClass("/cityfest")}
+            component={<Link href="/cityfest" />}
+          >
+            City Fest{" "}
           </MenuItem>
 
           <MenuItem

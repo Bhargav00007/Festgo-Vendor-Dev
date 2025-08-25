@@ -105,7 +105,7 @@ export default function FestsPage() {
           .map((item) => item.trim()),
       };
 
-      const res = await fetch("https://server.festgo.in/api/beach-fests", {
+      const res = await fetch("https://server.festgo.in/api/city-fests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -152,7 +152,7 @@ export default function FestsPage() {
             <ol className="inline-flex items-center space-x-1 md:space-x-3">
               <li className="inline-flex items-center">
                 <button
-                  onClick={() => router.push("/fests/list")}
+                  onClick={() => router.push("/cityfest")}
                   className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
                 >
                   <svg
@@ -162,7 +162,7 @@ export default function FestsPage() {
                   >
                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
                   </svg>
-                  Beach Fest
+                  City Fest
                 </button>
               </li>
               <li>
@@ -179,17 +179,17 @@ export default function FestsPage() {
                     ></path>
                   </svg>
                   <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
-                    Create Beach Fest
+                    Create City Fest
                   </span>
                 </div>
               </li>
             </ol>
           </nav>
         </div>
-        <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Create Beach Fest
+        <h1 className="text-4xl pb-1 font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+          Create City Fest
         </h1>
-        <p className="mt-2 text-lg text-gray-600">
+        <p className="mt-1 text-lg text-gray-600">
           Plan, publish, and showcase unforgettable fests to your audience
         </p>
       </div>
@@ -239,7 +239,7 @@ export default function FestsPage() {
             value={form.type}
             onChange={handleChange}
             className="w-full border border-gray-300 rounded-lg p-2"
-            placeholder="e.g., Beach Music Festival"
+            placeholder="e.g., City Music Festival"
             required
           />
         </div>

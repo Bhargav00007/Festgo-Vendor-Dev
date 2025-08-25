@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { MoreVertical, Edit3, Trash2, X, Plus } from "lucide-react";
+import { Edit3, Trash2, X, Plus, List } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { BarLoader } from "react-spinners";
 
@@ -56,7 +56,7 @@ function Modal({
           <h3 className="text-xl font-semibold">{title}</h3>
           <button
             onClick={onClose}
-            className="rounded-full p-1 hover:bg-gray-100 border border-gray-200"
+            className="rounded-full p-1 hover:bg-gray-100 border border-gray-200 cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -78,7 +78,6 @@ export default function FestBiteMenuTypesPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [current, setCurrent] = useState<MenuType | null>(null);
   const [editValue, setEditValue] = useState<string>("");
-  const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
   const token = useMemo(
     () =>
@@ -102,7 +101,9 @@ export default function FestBiteMenuTypesPage() {
       );
       if (!res.ok) throw new Error("Failed to fetch menu types");
       const data: unknown = await res.json();
-      setMenuTypes(Array.isArray(data) ? (data as MenuType[]) : []);
+
+      const types: MenuType[] = Array.isArray(data) ? (data as MenuType[]) : [];
+      setMenuTypes(types);
     } catch (err) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -123,13 +124,11 @@ export default function FestBiteMenuTypesPage() {
     setCurrent(mt);
     setEditValue(mt.typeName || "");
     setEditOpen(true);
-    setMenuOpen(null);
   };
 
   const openDelete = (mt: MenuType) => {
     setCurrent(mt);
     setDeleteOpen(true);
-    setMenuOpen(null);
   };
 
   const handleEditSave = async () => {
@@ -190,6 +189,8 @@ export default function FestBiteMenuTypesPage() {
   return (
     <div className="mx-auto max-w-5xl p-6 my-20">
       <ToastContainer />
+
+      {/* Keep FestBite heading and slogan + Create button */}
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -201,82 +202,102 @@ export default function FestBiteMenuTypesPage() {
         </div>
         <button
           onClick={() => router.push("/festbite/create")}
-          className="hidden sm:flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700"
+          className="hidden sm:flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700 cursor-pointer"
         >
           <Plus className="h-5 w-5" /> Create
         </button>
         <button
           onClick={() => router.push("/festbite/create")}
-          className="sm:hidden fixed bottom-6 right-6 flex items-center justify-center rounded-full bg-blue-600 w-16 h-16 text-white shadow-lg hover:bg-blue-700"
+          className="sm:hidden fixed bottom-6 right-6 flex items-center justify-center rounded-full bg-blue-600 w-16 h-16 text-white shadow-lg hover:bg-blue-700 cursor-pointer"
         >
           <Plus className="h-8 w-8" />
         </button>
       </div>
 
+      {/* Stats Box */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div className="flex items-center gap-4 rounded-xl border border-gray-300 bg-white p-4 hover:shadow-sm">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+            <List className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Total Menu Types</p>
+            <p className="text-xl font-semibold">{menuTypes.length}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
           <BarLoader color="#4A90E2" loading={loading} />
         </div>
       ) : menuTypes.length === 0 ? (
-        <div className="rounded-2xl border border-gray-200 p-8 text-center">
+        <div className="rounded-2xl border border-gray-300 p-8 text-center">
           No menu types found.
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-4">
-          {menuTypes.map((mt) => (
-            <div
-              key={mt.id}
-              onClick={() => router.push(`/festbite/menu-items/${mt.id}`)}
-              className="relative flex h-40 flex-col justify-between rounded-xl border border-gray-200 p-4 shadow-sm transition hover:shadow-md cursor-pointer"
-            >
-              <div className="text-lg font-semibold leading-snug">
-                {mt.typeName}
-              </div>
-              <div className="text-xs text-gray-500">
-                {mt.createdAt
-                  ? new Date(mt.createdAt).toLocaleDateString()
-                  : "-"}
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setMenuOpen(menuOpen === mt.id ? null : mt.id);
-                }}
-                className="absolute right-2 bottom-3 rounded-full p-1 cursor-pointer"
-              >
-                <MoreVertical className="h-5 w-5" />
-              </button>
-              <div
-                className={`absolute right-2 top-38 z-100 w-32 rounded-lg border border-gray-200 bg-white shadow-md transform transition-all duration-200 origin-top
-    ${
-      menuOpen === mt.id
-        ? "opacity-100 scale-100"
-        : "opacity-0 scale-95 pointer-events-none"
-    }
-  `}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openEdit(mt);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-blue-50"
-                >
-                  <Edit3 className="h-4 w-4 text-blue-600" /> Edit
-                </button>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openDelete(mt);
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4 text-red-600" /> Delete
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto rounded-xl border border-gray-300 bg-white">
+          {/* Section Heading for Table */}
+          <div className="m-4">
+            <h2 className="text-2xl font-semibold text-gray-900">Menu Types</h2>
+            <p className="text-gray-600">Complete list of all menu types</p>
+          </div>
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-gray-100 border-b border-gray-300">
+              <tr>
+                <th className="px-4 py-3 text-xs text-gray-500 uppercase">
+                  S.NO
+                </th>
+                <th className="px-4 py-3 text-xs text-gray-500 uppercase">
+                  Menu
+                </th>
+                <th className="px-4 py-3 text-xs text-gray-500 uppercase">
+                  Date
+                </th>
+                <th className="px-4 py-3 text-xs text-gray-500 uppercase">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {menuTypes.map((mt, index) => (
+                <tr key={mt.id} className="hover:bg-gray-50">
+                  <td className="px-4 py-3">{index + 1}</td>
+                  <td className="px-4 py-3 font-medium text-gray-800">
+                    {mt.typeName}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {mt.createdAt
+                      ? new Date(mt.createdAt).toLocaleDateString()
+                      : "-"}
+                  </td>
+                  <td className="px-4 py-3 flex gap-2">
+                    <button
+                      onClick={() =>
+                        router.push(`/festbite/menu-items/${mt.id}`)
+                      }
+                      className="rounded-md bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600 cursor-pointer"
+                    >
+                      View
+                    </button>
+                    <button
+                      onClick={() => openEdit(mt)}
+                      className="rounded-md bg-gray-200 px-3 py-1 text-xs text-gray-800 hover:bg-gray-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="h-3 w-3" /> Edit
+                    </button>
+                    <button
+                      onClick={() => openDelete(mt)}
+                      className="rounded-md bg-red-500 px-3 py-1 text-xs text-white hover:bg-red-600 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Trash2 className="h-3 w-3" /> Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -289,13 +310,13 @@ export default function FestBiteMenuTypesPage() {
           <>
             <button
               onClick={() => setEditOpen(false)}
-              className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100"
+              className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleEditSave}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold hover:bg-blue-700"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold hover:bg-blue-700 cursor-pointer"
             >
               Save
             </button>
@@ -320,13 +341,13 @@ export default function FestBiteMenuTypesPage() {
           <>
             <button
               onClick={() => setDeleteOpen(false)}
-              className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100"
+              className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={handleDeleteConfirm}
-              className="rounded-lg bg-red-600 px-4 py-2 text-white font-semibold hover:bg-red-700"
+              className="rounded-lg bg-red-600 px-4 py-2 text-white font-semibold hover:bg-red-700 cursor-pointer"
             >
               Delete
             </button>
