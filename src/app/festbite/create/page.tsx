@@ -4,46 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Plus } from "lucide-react";
 
 export default function FestbiteCreatePage() {
   const router = useRouter();
   const [typeName, setTypeName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
-  const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  // ✅ Handle image upload
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPreview(URL.createObjectURL(file)); // show preview immediately
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("https://server.festgo.in/api/upload/public", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Image upload failed");
-      const data = await res.json();
-      setImageUrl(data?.url || "");
-      toast.success("Image uploaded successfully!");
-    } catch {
-      toast.error("Failed to upload image");
-    }
-  };
 
   // ✅ Handle form submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!typeName.trim() || !imageUrl.trim()) {
-      toast.error("Menu type name and image are required.");
+    if (!typeName.trim()) {
+      toast.error("Menu type name is required.");
       return;
     }
 
@@ -64,7 +36,7 @@ export default function FestbiteCreatePage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ typeName, imageUrl }),
+          body: JSON.stringify({ typeName }),
         }
       );
 
@@ -73,8 +45,6 @@ export default function FestbiteCreatePage() {
       await res.json();
       toast.success("Menu type created successfully!");
       setTypeName("");
-      setImageUrl("");
-      setPreview(null);
 
       setTimeout(() => {
         router.push("/festbite");
@@ -156,38 +126,6 @@ export default function FestbiteCreatePage() {
             placeholder="e.g. Veg Menu"
             className="w-full max-w-lg px-3 py-2 text-sm border border-gray-200 rounded-lg shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
           />
-        </div>
-
-        {/* Image Upload */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Upload Image
-          </label>
-          <div className="flex items-center gap-4">
-            <label
-              htmlFor="fileUpload"
-              className="w-28 h-28 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50"
-            >
-              <Plus className="w-8 h-8 text-gray-500" />
-              <span className="text-xs text-gray-500">Upload</span>
-              <input
-                id="fileUpload"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleImageUpload}
-              />
-            </label>
-
-            {/* Preview */}
-            {preview && (
-              <img
-                src={preview}
-                alt="Preview"
-                className="w-28 h-28 object-cover rounded-lg "
-              />
-            )}
-          </div>
         </div>
 
         {/* Submit */}

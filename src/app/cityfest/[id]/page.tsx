@@ -25,6 +25,7 @@ import "react-toastify/dist/ReactToastify.css";
 interface Fest {
   id: string;
   type: string;
+  categoryId?: string;
   location: string;
   latitude: number;
   longitude: number;
@@ -39,13 +40,25 @@ interface Fest {
   whats_included: string[];
 }
 
+interface Category {
+  id: string;
+  name: string;
+  image?: string;
+}
+
 export default function FestDetailPage() {
   const { id } = useParams();
   const router = useRouter();
+
   const [fest, setFest] = useState<Fest | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  // Get category name by fest categoryId
+  const categoryName =
+    fest && categories.find((c) => c.id === fest.categoryId)?.name;
 
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {
@@ -56,6 +69,27 @@ export default function FestDetailPage() {
   };
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const token = localStorage.getItem("vendorToken");
+        const res = await fetch(
+          "https://server.festgo.in/api/city-fests/categories",
+          {
+            headers: { Authorization: token ? `Bearer ${token}` : "" },
+          }
+        );
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setCategories(json.data);
+        } else {
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategories([]);
+      }
+    };
+
     const fetchFest = async () => {
       try {
         const vendorToken = localStorage.getItem("vendorToken");
@@ -63,7 +97,7 @@ export default function FestDetailPage() {
           `https://server.festgo.in/api/city-fests/${id}`,
           {
             headers: {
-              Authorization: `Bearer ${vendorToken}`,
+              Authorization: vendorToken ? `Bearer ${vendorToken}` : "",
             },
           }
         );
@@ -78,7 +112,10 @@ export default function FestDetailPage() {
       }
     };
 
-    if (id) fetchFest();
+    if (id) {
+      setLoading(true);
+      Promise.all([fetchCategories(), fetchFest()]).catch(console.error);
+    }
   }, [id]);
 
   const handleDelete = async () => {
@@ -89,7 +126,7 @@ export default function FestDetailPage() {
       const res = await fetch(`https://server.festgo.in/api/city-fests/${id}`, {
         method: "DELETE",
         headers: {
-          Authorization: `Bearer ${vendorToken}`,
+          Authorization: vendorToken ? `Bearer ${vendorToken}` : "",
         },
       });
 
@@ -170,9 +207,11 @@ export default function FestDetailPage() {
           </nav>
         </div>
 
-        {/* Header */}
+        {/* Header - show category name if available, else show fest.type */}
         <div className="flex justify-between items-start">
-          <h1 className="text-4xl font-bold text-gray-900">{fest.type}</h1>
+          <h1 className="text-4xl font-bold text-gray-900">
+            {categoryName ?? fest.type}
+          </h1>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -9,12 +9,20 @@ import { BarLoader } from "react-spinners";
 
 // Types
 interface EventType {
+  image: null;
   id: string;
   name: string;
-  imageUrl: string;
+  imageUrl: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
+
+// Utility: normalize image URL
+const normalizeImageUrl = (url: string | null): string | null => {
+  if (!url) return null;
+  if (url.startsWith("http")) return url;
+  return `https://server.festgo.in${url}`;
+};
 
 // Reusable Modal
 function Modal({
@@ -123,8 +131,19 @@ export default function EventTypesPage() {
         }
       );
       if (!res.ok) throw new Error("Failed to fetch event types");
-      const data: unknown = await res.json();
-      setEventTypes(Array.isArray(data) ? (data as EventType[]) : []);
+      const json = await res.json();
+
+      const data = Array.isArray(json?.data) ? json.data : [];
+
+      const mapped: EventType[] = data.map((item: EventType) => ({
+        id: item.id,
+        name: item.name,
+        imageUrl: normalizeImageUrl(item.image ?? null),
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+      }));
+
+      setEventTypes(mapped);
     } catch (err) {
       if (err instanceof Error) {
         toast.error(err.message);
@@ -179,7 +198,7 @@ export default function EventTypesPage() {
 
     if (!res.ok) throw new Error("Image upload failed");
     const data = await res.json();
-    return data.url; // assuming backend returns { url: "https://..." }
+    return normalizeImageUrl(data.url) ?? "";
   };
 
   const handleEditSave = async () => {
@@ -205,7 +224,7 @@ export default function EventTypesPage() {
           },
           body: JSON.stringify({
             name: editValue.trim(),
-            imageUrl,
+            image: imageUrl,
           }),
         }
       );
@@ -255,6 +274,11 @@ export default function EventTypesPage() {
     }
   };
 
+  // CHANGE: On card click, redirect to /cityfest?categoryId={category.id}
+  const handleCardClick = (categoryId: string) => {
+    router.push(`/cityfest?categoryId=${categoryId}`);
+  };
+
   return (
     <div className="mx-auto max-w-5xl p-6 my-20">
       <ToastContainer draggable closeOnClick />
@@ -270,7 +294,6 @@ export default function EventTypesPage() {
           </p>
         </div>
 
-        {/* Create Button */}
         <button
           onClick={() => router.push("/cityfest/create-categories")}
           className="hidden sm:flex items-center gap-2 cursor-pointer rounded-full bg-purple-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-purple-700"
@@ -278,7 +301,6 @@ export default function EventTypesPage() {
           <Plus className="h-5 w-5" /> Create
         </button>
 
-        {/* Mobile Floating Button */}
         <button
           onClick={() => router.push("/cityfest/create-categories")}
           className="sm:hidden fixed bottom-6 z-50 right-6 flex items-center justify-center rounded-full bg-purple-600 w-16 h-16 text-white shadow-lg hover:bg-purple-700"
@@ -301,10 +323,9 @@ export default function EventTypesPage() {
           {eventTypes.map((et) => (
             <div
               key={et.id}
-              onClick={() => router.push(`/events/${et.id}`)}
+              onClick={() => handleCardClick(et.id)}
               className="relative flex h-60 flex-col justify-between rounded-xl border border-gray-200 shadow-sm transition hover:shadow-md cursor-pointer"
             >
-              {/* Event Image */}
               <div className="w-full h-full rounded-xl overflow-hidden bg-gray-100">
                 {et.imageUrl ? (
                   <img
@@ -319,7 +340,6 @@ export default function EventTypesPage() {
                 )}
               </div>
 
-              {/* Event Name + Dropdown */}
               <div className="px-4 pb-2 flex items-center justify-between">
                 <div>
                   <div className="mt-2 text-lg font-semibold leading-snug text-gray-800">
@@ -395,7 +415,6 @@ export default function EventTypesPage() {
           </>
         }
       >
-        {/* Name */}
         <label className="block text-sm font-medium text-gray-700">
           Event Type Name
         </label>
@@ -406,13 +425,11 @@ export default function EventTypesPage() {
           className="mt-1 mb-4 w-full rounded-xl border border-gray-200 px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
         />
 
-        {/* Image Upload Area */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Image
           </label>
 
-          {/* Preview if exists */}
           {previewImage && (
             <div className="mb-3">
               <img
@@ -423,7 +440,6 @@ export default function EventTypesPage() {
             </div>
           )}
 
-          {/* Dotted Drop Area */}
           <label
             htmlFor="editImageInput"
             className="flex flex-col items-center justify-center gap-2 w-full h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-blue-400 transition cursor-pointer"

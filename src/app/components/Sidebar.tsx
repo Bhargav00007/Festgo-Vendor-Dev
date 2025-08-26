@@ -104,8 +104,8 @@ const SidebarMenu = () => {
 
           <MenuItem
             icon={<LuBuilding2 size={22} />}
-            className={getMenuItemClass("/cityfest")}
-            component={<Link href="/cityfest" />}
+            className={getMenuItemClass("/cityfest/categories")}
+            component={<Link href="/cityfest/categories" />}
           >
             City Fest{" "}
           </MenuItem>

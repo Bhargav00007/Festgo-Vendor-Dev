@@ -13,7 +13,7 @@ export default function EventTypesCreatePage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // generate & clean up local preview URL
+  // Generate & clean up local preview URL
   useEffect(() => {
     if (!imageFile) {
       setPreviewUrl(null);
@@ -56,18 +56,25 @@ export default function EventTypesCreatePage() {
         "https://server.festgo.in/api/upload/public",
         {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           body: formData,
         }
       );
 
       if (!uploadRes.ok) {
+        const errText = await uploadRes.text();
         throw new Error(`Image upload failed: ${uploadRes.status}`);
       }
 
       const uploadData = await uploadRes.json();
-      const imageUrl = uploadData?.url;
+
+      const imageUrl = uploadData?.url || uploadData?.data?.url;
       if (!imageUrl) throw new Error("Image URL missing from upload response.");
 
+      // 2) Create event type
+      // FIX: Must send "image", not "imageUrl"
       const res = await fetch(
         "https://server.festgo.in/api/city-fests/categories",
         {
@@ -76,11 +83,12 @@ export default function EventTypesCreatePage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ name: name.trim(), imageUrl }),
+          body: JSON.stringify({ name: name.trim(), image: imageUrl }),
         }
       );
 
       if (!res.ok) {
+        const errText = await res.text();
         throw new Error(`Failed to create: ${res.status}`);
       }
 
@@ -113,6 +121,7 @@ export default function EventTypesCreatePage() {
                 onClick={() => router.push("/cityfest/categories")}
                 className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
+                {/* Home Icon */}
                 <svg
                   className="w-4 h-4 mr-2"
                   fill="currentColor"
@@ -155,7 +164,7 @@ export default function EventTypesCreatePage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5 max-w-md">
-        {/* Name (slightly smaller) */}
+        {/* Name */}
         <div>
           <label
             htmlFor="name"
@@ -173,24 +182,22 @@ export default function EventTypesCreatePage() {
           />
         </div>
 
-        {/* Image upload: dashed square with plus + preview */}
+        {/* Image upload */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Upload Image
           </label>
 
-          {/* Preview if selected */}
           {previewUrl && (
             <div className="mb-3">
               <img
                 src={previewUrl}
                 alt="Preview"
-                className="w-24 h-24 object-cover rounded-lg "
+                className="w-24 h-24 object-cover rounded-lg"
               />
             </div>
           )}
 
-          {/* Dotted square drop/pick area */}
           <label
             htmlFor="image"
             className="flex items-center justify-center w-28 h-28 rounded-xl border-2 border-dashed border-gray-300 hover:border-purple-400 cursor-pointer"
@@ -211,7 +218,7 @@ export default function EventTypesCreatePage() {
           />
         </div>
 
-        {/* Submit (slightly smaller) */}
+        {/* Submit */}
         <button
           type="submit"
           disabled={loading}

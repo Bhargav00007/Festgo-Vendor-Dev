@@ -217,7 +217,7 @@ export default function FestBiteMenuTypesPage() {
       {/* Stats Box */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="flex items-center gap-4 rounded-xl border border-gray-300 bg-white p-4 hover:shadow-sm">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
             <List className="h-6 w-6" />
           </div>
           <div>
