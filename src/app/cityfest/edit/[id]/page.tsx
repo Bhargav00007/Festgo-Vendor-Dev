@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { BarLoader } from "react-spinners";
 import { toast } from "react-toastify";
+import { Plus, X } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css"; // ✅ Ensure styles are loaded
 
 interface Fest {
@@ -66,6 +67,23 @@ export default function FestEditPage() {
     setFest((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!fest) return;
+    const files = e.target.files;
+    if (!files) return;
+
+    const newImages = Array.from(files).map((file) =>
+      URL.createObjectURL(file)
+    );
+    handleChange("image_urls", [...fest.image_urls, ...newImages]);
+  };
+
+  const handleRemoveImage = (index: number) => {
+    if (!fest) return;
+    const updated = fest.image_urls.filter((_, i) => i !== index);
+    handleChange("image_urls", updated);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fest) return;
@@ -121,66 +139,6 @@ export default function FestEditPage() {
     <div className="max-w-4xl mx-auto p-6 mt-20">
       {/* Breadcrumb */}
       <div className="mb-10">
-        <div className="mb-6">
-          <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
-              <li className="inline-flex items-center">
-                <button
-                  onClick={() => router.push("/cityfest")}
-                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-                >
-                  <svg
-                    className="w-4 h-4 mr-2"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
-                  </svg>
-                  City Fests Details
-                </button>
-              </li>
-              <li>
-                <div className="flex items-center">
-                  <svg
-                    className="w-6 h-6 text-gray-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
-                  <button
-                    onClick={() => router.push(`/cityfest/${id}`)}
-                    className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 transition-colors"
-                  >
-                    Fest
-                  </button>
-                </div>
-              </li>
-              <li>
-                <div className="flex items-center">
-                  <svg
-                    className="w-6 h-6 text-gray-400"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                      clipRule="evenodd"
-                    ></path>
-                  </svg>
-                  <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 ">
-                    Edit City Fest
-                  </span>
-                </div>
-              </li>
-            </ol>
-          </nav>
-        </div>
         <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent pb-1">
           Edit City Fest
         </h1>
@@ -192,8 +150,6 @@ export default function FestEditPage() {
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Fest Type */}
-
         {/* Location */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -326,19 +282,44 @@ export default function FestEditPage() {
           />
         </div>
 
-        {/* Image URLs */}
+        {/* Image Uploads */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Image URLs (comma separated)
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Images
           </label>
-          <textarea
-            className="border border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none p-3 w-full rounded-xl"
-            value={fest.image_urls.join(",")}
-            onChange={(e) =>
-              handleChange("image_urls", e.target.value.split(","))
-            }
-            placeholder="Image URLs"
-          />
+          <div className="flex flex-wrap gap-4">
+            {fest.image_urls.map((url, index) => (
+              <div
+                key={index}
+                className="relative w-32 h-32 rounded-lg overflow-hidden border"
+              >
+                <img
+                  src={url}
+                  alt={`Image ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 hover:bg-red-700"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+
+            {/* Upload Box */}
+            <label className="w-32 h-32 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+              <Plus className="text-gray-400" size={32} />
+            </label>
+          </div>
         </div>
 
         {/* Google Map URL */}

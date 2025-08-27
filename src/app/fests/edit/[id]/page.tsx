@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, ChangeEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { BarLoader } from "react-spinners";
 import { toast } from "react-toastify";
+import { X, Plus } from "lucide-react";
 import "react-toastify/dist/ReactToastify.css"; // ✅ Ensure styles are loaded
 
 interface Fest {
@@ -65,6 +66,26 @@ export default function FestEditPage() {
 
   const handleChange = <K extends keyof Fest>(field: K, value: Fest[K]) => {
     setFest((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
+
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !fest) return;
+
+    const files = Array.from(e.target.files);
+    const newImageUrls = [...fest.image_urls];
+
+    files.forEach((file) => {
+      const url = URL.createObjectURL(file);
+      newImageUrls.push(url); // temporary blob URL for preview
+    });
+
+    setFest({ ...fest, image_urls: newImageUrls });
+  };
+
+  const handleImageRemove = (index: number) => {
+    if (!fest) return;
+    const updatedImages = fest.image_urls.filter((_, i) => i !== index);
+    setFest({ ...fest, image_urls: updatedImages });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -341,19 +362,42 @@ export default function FestEditPage() {
           />
         </div>
 
-        {/* Image URLs */}
+        {/* Image Upload */}
         <div>
-          <label className="block text-sm font-medium text-gray-600 mb-1">
-            Image URLs (comma separated)
+          <label className="block text-sm font-medium text-gray-600 mb-2">
+            Images
           </label>
-          <textarea
-            className="border border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-200 outline-none p-3 w-full rounded-xl"
-            value={fest.image_urls.join(",")}
-            onChange={(e) =>
-              handleChange("image_urls", e.target.value.split(","))
-            }
-            placeholder="Image URLs"
-          />
+          <div className="flex flex-wrap gap-4">
+            {/* Uploaded Images */}
+            {fest.image_urls.map((url, index) => (
+              <div key={index} className="relative w-32 h-32">
+                <img
+                  src={url}
+                  alt={`Fest Image ${index + 1}`}
+                  className="w-full h-full object-cover rounded-lg border"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleImageRemove(index)}
+                  className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+
+            {/* Upload Box */}
+            <label className="w-32 h-32 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-100">
+              <Plus size={28} className="text-gray-500" />
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+            </label>
+          </div>
         </div>
 
         {/* Google Map URL */}
