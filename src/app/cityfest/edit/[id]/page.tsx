@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { BarLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import { Plus, X } from "lucide-react";
-import "react-toastify/dist/ReactToastify.css"; // ✅ Ensure styles are loaded
+import "react-toastify/dist/ReactToastify.css";
 
 interface Fest {
   id: string;
@@ -67,15 +67,45 @@ export default function FestEditPage() {
     setFest((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!fest) return;
     const files = e.target.files;
     if (!files) return;
 
-    const newImages = Array.from(files).map((file) =>
-      URL.createObjectURL(file)
-    );
-    handleChange("image_urls", [...fest.image_urls, ...newImages]);
+    const token = localStorage.getItem("vendorToken");
+    if (!token) {
+      toast.error("No vendor token found. Please log in again.");
+      return;
+    }
+
+    const uploadedUrls: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("https://server.festgo.in/api/upload/public", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (res.ok && data?.url) {
+          uploadedUrls.push(data.url);
+        } else {
+          toast.error(`Failed to upload image: ${file.name}`);
+        }
+      } catch (err) {
+        console.error("Error uploading image:", err);
+        toast.error(`Error uploading ${file.name}`);
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      handleChange("image_urls", [...fest.image_urls, ...uploadedUrls]);
+    }
   };
 
   const handleRemoveImage = (index: number) => {

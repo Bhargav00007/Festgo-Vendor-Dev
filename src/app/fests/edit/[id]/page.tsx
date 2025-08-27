@@ -30,6 +30,7 @@ export default function FestEditPage() {
   const [fest, setFest] = useState<Fest | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     const fetchFest = async () => {
@@ -68,18 +69,55 @@ export default function FestEditPage() {
     setFest((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
 
-  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !fest) return;
 
     const files = Array.from(e.target.files);
-    const newImageUrls = [...fest.image_urls];
+    const token = localStorage.getItem("vendorToken");
+    if (!token) {
+      toast.error("No vendor token found. Please log in again.");
+      return;
+    }
 
-    files.forEach((file) => {
-      const url = URL.createObjectURL(file);
-      newImageUrls.push(url); // temporary blob URL for preview
-    });
+    try {
+      setUploading(true);
 
-    setFest({ ...fest, image_urls: newImageUrls });
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("https://server.festgo.in/api/upload/public", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (!res.ok) {
+          toast.error(`Failed to upload ${file.name}`);
+          continue;
+        }
+
+        const data = await res.json();
+        if (data?.url) {
+          setFest((prev) =>
+            prev
+              ? { ...prev, image_urls: [...prev.image_urls, data.url] }
+              : prev
+          );
+        } else {
+          toast.error(`Upload failed for ${file.name}`);
+        }
+      }
+
+      toast.success("Images uploaded successfully!");
+    } catch (error) {
+      console.error("Image upload error:", error);
+      toast.error("Something went wrong while uploading images.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleImageRemove = (index: number) => {
@@ -365,7 +403,7 @@ export default function FestEditPage() {
         {/* Image Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-2">
-            Images
+            Images {uploading && "(Uploading...)"}
           </label>
           <div className="flex flex-wrap gap-4">
             {/* Uploaded Images */}
