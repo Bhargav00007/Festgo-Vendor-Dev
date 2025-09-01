@@ -5,11 +5,12 @@ import { usePathname } from "next/navigation";
 import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 import { FaBars } from "react-icons/fa";
 import { VscGraph } from "react-icons/vsc";
-import { FaUmbrellaBeach } from "react-icons/fa6";
+import { MdOutlineBeachAccess } from "react-icons/md";
 import { LuUsersRound } from "react-icons/lu";
 import { LuPartyPopper } from "react-icons/lu";
 import { LiaCookieBiteSolid } from "react-icons/lia";
 import { LuBuilding2 } from "react-icons/lu";
+import { TbBus } from "react-icons/tb";
 
 const SidebarMenu = () => {
   const pathname = usePathname();
@@ -95,11 +96,24 @@ const SidebarMenu = () => {
           </div>
 
           <MenuItem
-            icon={<FaUmbrellaBeach size={20} />}
+            icon={
+              <MdOutlineBeachAccess
+                size={22}
+                style={{ transform: "scaleX(-1)" }}
+              />
+            }
             className={getMenuItemClass("/fests/list")}
             component={<Link href="/fests/list" />}
           >
             Beach Fest
+          </MenuItem>
+
+          <MenuItem
+            icon={<TbBus size={22} />}
+            className={getMenuItemClass("/festgotrips")}
+            component={<Link href="/festgotrips" />}
+          >
+            Trips{" "}
           </MenuItem>
 
           <MenuItem
