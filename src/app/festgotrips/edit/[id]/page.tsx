@@ -16,7 +16,7 @@ interface Fest {
   pricing: Record<string, number>;
   pickupLocation: string;
   inclusions: string[];
-  image_urls: string[];
+  imageUrl: string; // ✅ string instead of array
   latitude?: number;
   longitude?: number;
   total_passes?: number;
@@ -63,7 +63,7 @@ export default function FestEditPage() {
             inclusions: Array.isArray(trip.inclusions)
               ? trip.inclusions
               : trip.inclusions?.split(",").map((s: string) => s.trim()) || [],
-            image_urls: trip.image_urls || [],
+            imageUrl: trip.imageUrl || "", // ✅ backend returns string
             latitude: trip.latitude,
             longitude: trip.longitude,
             total_passes: trip.total_passes,
@@ -101,6 +101,8 @@ export default function FestEditPage() {
     try {
       setUploading(true);
 
+      const updatedUrls = fest.imageUrl ? fest.imageUrl.split(",") : [];
+
       for (const file of files) {
         const formData = new FormData();
         formData.append("file", file);
@@ -120,12 +122,13 @@ export default function FestEditPage() {
 
         const data = await res.json();
         if (data?.url) {
-          handleChange("image_urls", [...fest.image_urls, data.url]);
+          updatedUrls.push(data.url);
         } else {
           toast.error(`Upload failed for ${file.name}`);
         }
       }
 
+      handleChange("imageUrl", updatedUrls.join(",")); // ✅ store back as string
       toast.success("Images uploaded successfully!");
     } catch (error) {
       console.error("Image upload error:", error);
@@ -137,8 +140,9 @@ export default function FestEditPage() {
 
   const handleImageRemove = (index: number) => {
     if (!fest) return;
-    const updatedImages = fest.image_urls.filter((_, i) => i !== index);
-    setFest({ ...fest, image_urls: updatedImages });
+    const urls = fest.imageUrl ? fest.imageUrl.split(",") : [];
+    const updated = urls.filter((_, i) => i !== index);
+    setFest({ ...fest, imageUrl: updated.join(",") }); // ✅ back to string
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -194,6 +198,8 @@ export default function FestEditPage() {
       </div>
     );
   }
+
+  const imageList = fest.imageUrl ? fest.imageUrl.split(",") : []; // ✅ safe array for UI
 
   return (
     <div className="max-w-4xl mx-auto p-6 mt-20">
@@ -333,7 +339,7 @@ export default function FestEditPage() {
                 const parsed = JSON.parse(e.target.value);
                 handleChange("pricing", parsed);
               } catch {
-                // Optionally handle JSON errors
+                // ignore invalid JSON
               }
             }}
             placeholder='Enter pricing as JSON like {"4":5000,"8":3000,"16":2000}'
@@ -383,29 +389,25 @@ export default function FestEditPage() {
             Images {uploading && "(Uploading...)"}
           </label>
           <div className="flex flex-wrap gap-4">
-            {fest.image_urls.map((url, index) => (
+            {imageList.map((url, index) => (
               <div key={index} className="relative w-32 h-32">
-                <img
-                  src={url}
-                  alt={`Trip Image ${index + 1}`}
-                  className="w-full h-full object-cover rounded-lg border"
-                />
                 <button
                   type="button"
-                  onClick={() => {
-                    const updated = fest.image_urls.filter(
-                      (_, i) => i !== index
-                    );
-                    handleChange("image_urls", updated);
-                  }}
+                  onClick={() => handleImageRemove(index)}
                   className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full"
                   aria-label="Remove image"
                 >
                   <X size={16} />
                 </button>
+                <img
+                  src={url}
+                  alt={`Trip Image ${index + 1}`}
+                  className="w-full h-full object-cover rounded-lg "
+                />
               </div>
             ))}
 
+            {/* Upload button */}
             <label className="w-32 h-32 flex items-center justify-center border-2 border-dashed border-gray-400 rounded-lg cursor-pointer hover:bg-gray-100">
               <Plus size={28} className="text-gray-500" />
               <input
@@ -413,49 +415,7 @@ export default function FestEditPage() {
                 accept="image/*"
                 multiple
                 className="hidden"
-                onChange={async (e) => {
-                  if (!e.target.files) return;
-                  const files = Array.from(e.target.files);
-                  const token = localStorage.getItem("vendorToken");
-                  if (!token) {
-                    toast.error("No vendor token found. Please log in again.");
-                    return;
-                  }
-                  try {
-                    setUploading(true);
-                    for (const file of files) {
-                      const formData = new FormData();
-                      formData.append("file", file);
-                      const res = await fetch(
-                        "https://server.festgo.in/api/upload/public",
-                        {
-                          method: "POST",
-                          headers: { Authorization: `Bearer ${token}` },
-                          body: formData,
-                        }
-                      );
-                      if (!res.ok) {
-                        toast.error(`Failed to upload ${file.name}`);
-                        continue;
-                      }
-                      const data = await res.json();
-                      if (data?.url) {
-                        handleChange("image_urls", [
-                          ...fest.image_urls,
-                          data.url,
-                        ]);
-                      } else {
-                        toast.error(`Upload failed for ${file.name}`);
-                      }
-                    }
-                    toast.success("Images uploaded successfully!");
-                  } catch (error) {
-                    console.error("Image upload error:", error);
-                    toast.error("Something went wrong while uploading images.");
-                  } finally {
-                    setUploading(false);
-                  }
-                }}
+                onChange={handleImageUpload}
               />
             </label>
           </div>
