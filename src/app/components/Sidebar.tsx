@@ -67,7 +67,7 @@ const SidebarMenu = () => {
         toggled={toggled}
         breakPoint="md"
         onBackdropClick={() => setToggled(false)}
-        backgroundColor="#ffffff"
+        backgroundColor="#f7f7f7"
         rootStyles={{
           color: "#414141ff",
           borderRight: "none",

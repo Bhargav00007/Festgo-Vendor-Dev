@@ -6,6 +6,8 @@ import Link from "next/link";
 import { BarLoader } from "react-spinners";
 import { Icon } from "@iconify/react";
 import PropertyImageGallery from "@/app/components/PropertyGallery";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 type SelectedAttribute = {
   id: number;
@@ -170,6 +172,23 @@ type Vendor = {
   role?: string;
 };
 
+type PaymentData = {
+  id: string;
+  amount: number;
+  bookingId: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Update the CommissionData type to match API response
+type CommissionData = {
+  id?: string;
+  commission: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -180,6 +199,13 @@ export default function PropertyDetailPage() {
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [commission, setCommission] = useState<CommissionData | null>(null);
+  const [showCommissionModal, setShowCommissionModal] = useState(false);
+  const [newCommission, setNewCommission] = useState("");
+  const [paidPayments, setPaidPayments] = useState<PaymentData[]>([]);
+  const [unpaidPayments, setUnpaidPayments] = useState<PaymentData[]>([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -261,6 +287,181 @@ export default function PropertyDetailPage() {
     );
   };
 
+  const fetchCommission = async () => {
+    try {
+      const token = localStorage.getItem("vendorToken");
+      const response = await fetch(
+        "https://server.festgo.in/api/admin/commission",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+      setCommission(data);
+    } catch (error) {
+      console.error("Error fetching commission:", error);
+    }
+  };
+
+  const updateCommission = async () => {
+    try {
+      if (!newCommission || parseFloat(newCommission) <= 0) {
+        toast.error("Please enter a valid commission percentage");
+        return;
+      }
+
+      const token = localStorage.getItem("vendorToken");
+      const response = await fetch(
+        "https://server.festgo.in/api/admin/commission",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ commission: parseFloat(newCommission) }), // Updated payload format
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update commission");
+      }
+
+      // Update the commission state with the new data
+      setCommission({
+        commission: data.data.commission,
+        updatedAt: data.data.updatedAt,
+        id: data.data.id,
+        createdAt: data.data.createdAt,
+      });
+
+      setShowCommissionModal(false);
+      toast.success(data.message || "Commission rate updated successfully!");
+    } catch (error) {
+      console.error("Error updating commission:", error);
+      toast.error("Failed to update commission");
+    }
+  };
+
+  const fetchPayments = async (type: "paid" | "unpaid") => {
+    try {
+      const token = localStorage.getItem("vendorToken");
+      const response = await fetch(
+        `https://server.festgo.in/api/admin/property-payments/${type}?propertyId=${propertyId}&page=1&limit=10`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await response.json();
+      if (type === "paid") {
+        setPaidPayments(data.payments || []);
+      } else {
+        setUnpaidPayments(data.payments || []);
+      }
+    } catch (error) {
+      console.error(`Error fetching ${type} payments:`, error);
+      if (type === "paid") {
+        setPaidPayments([]);
+      } else {
+        setUnpaidPayments([]);
+      }
+    }
+  };
+
+  const markAsPaid = async () => {
+    if (!selectedPayment) return;
+    try {
+      const token = localStorage.getItem("vendorToken");
+      await fetch(
+        "https://server.festgo.in/api/admin/property-payments/mark-paid",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ paymentId: selectedPayment }),
+        }
+      );
+      await fetchPayments("unpaid");
+      await fetchPayments("paid");
+      setShowPaymentModal(false);
+    } catch (error) {
+      console.error("Error marking payment as paid:", error);
+    }
+  };
+
+  const downloadExcel = async (type: "paid" | "unpaid") => {
+    try {
+      const token = localStorage.getItem("vendorToken");
+      const response = await fetch(
+        `https://server.festgo.in/api/admin/property-payments/export/${type}?propertyId=${propertyId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${type}-payments.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error(`Error downloading ${type} payments:`, error);
+    }
+  };
+
+  useEffect(() => {
+    if (propertyId) {
+      fetchCommission();
+      fetchPayments("paid");
+      fetchPayments("unpaid");
+    }
+  }, [propertyId]);
+
+  const tabs = [
+    {
+      id: "overview",
+      label: "Overview",
+      icon: "solar:home-2-bold-duotone",
+      description: "Basic property information",
+    },
+    {
+      id: "amenities",
+      label: "Amenities",
+      icon: "solar:widget-bold-duotone",
+      description: "Property features and services",
+    },
+    {
+      id: "rooms",
+      label: "Rooms",
+      icon: "solar:bed-bold-duotone",
+      description: "Room types and configurations",
+    },
+    {
+      id: "policies",
+      label: "Policies",
+      icon: "solar:document-text-bold-duotone",
+      description: "Rules and regulations",
+    },
+    {
+      id: "location",
+      label: "Location",
+      icon: "solar:map-point-bold-duotone",
+      description: "Address and coordinates",
+    },
+    {
+      id: "payments",
+      label: "Payments",
+      icon: "solar:card-bold-duotone",
+      description: "Payment management",
+    },
+  ];
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -299,41 +500,21 @@ export default function PropertyDetailPage() {
     );
   }
 
-  const tabs = [
-    {
-      id: "overview",
-      label: "Overview",
-      icon: "solar:home-2-bold-duotone",
-      description: "Basic property information",
-    },
-    {
-      id: "amenities",
-      label: "Amenities",
-      icon: "solar:widget-bold-duotone",
-      description: "Property features and services",
-    },
-    {
-      id: "rooms",
-      label: "Rooms",
-      icon: "solar:bed-bold-duotone",
-      description: "Room types and configurations",
-    },
-    {
-      id: "policies",
-      label: "Policies",
-      icon: "solar:document-text-bold-duotone",
-      description: "Rules and regulations",
-    },
-    {
-      id: "location",
-      label: "Location",
-      icon: "solar:map-point-bold-duotone",
-      description: "Address and coordinates",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 mt-20">
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
       {/* Enhanced Header Section */}
       <div className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -1522,6 +1703,222 @@ export default function PropertyDetailPage() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {activeTab === "payments" && (
+          <div className="space-y-6">
+            {/* Commission Management */}
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <Icon
+                    icon="solar:percent-bold-duotone"
+                    className="text-purple-600"
+                    width={24}
+                  />
+                  Commission Rate
+                </h3>
+                <button
+                  onClick={() => setShowCommissionModal(true)}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
+                >
+                  Update Commission
+                </button>
+              </div>
+              <p className="text-2xl font-bold text-purple-600">
+                {commission?.commission}%
+              </p>
+              <p className="text-sm text-gray-500">
+                Last updated:{" "}
+                {commission?.updatedAt
+                  ? new Date(commission.updatedAt).toLocaleString()
+                  : "Never"}
+              </p>
+            </div>
+
+            {/* Payment Lists */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Unpaid Payments */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Unpaid Payments
+                  </h3>
+                  <button
+                    onClick={() => downloadExcel("unpaid")}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Export Excel
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {unpaidPayments.length > 0 ? (
+                    unpaidPayments.map((payment) => (
+                      <div key={payment.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-semibold">₹{payment.amount}</p>
+                            <p className="text-sm text-gray-500">
+                              Booking: {payment.bookingId}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedPayment(payment.id);
+                              setShowPaymentModal(true);
+                            }}
+                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                          >
+                            Mark as Paid
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Icon
+                        icon="solar:card-bold-duotone"
+                        className="mx-auto text-gray-400 mb-3"
+                        width={48}
+                      />
+                      <p className="text-gray-600">No unpaid payments found</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Paid Payments */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    Paid Payments
+                  </h3>
+                  <button
+                    onClick={() => downloadExcel("paid")}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Export Excel
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {paidPayments.length > 0 ? (
+                    paidPayments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="p-4 border rounded-lg bg-green-50"
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-semibold">₹{payment.amount}</p>
+                            <p className="text-sm text-gray-500">
+                              Booking: {payment.bookingId}
+                            </p>
+                          </div>
+                          <span className="px-3 py-1 bg-green-600 text-white rounded">
+                            Paid
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Icon
+                        icon="solar:card-bold-duotone"
+                        className="mx-auto text-gray-400 mb-3"
+                        width={48}
+                      />
+                      <p className="text-gray-600">No paid payments found</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Commission Update Modal */}
+            {showCommissionModal && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-500">
+                <div
+                  className="bg-white rounded-2xl p-6 w-96 shadow-xl transform transition-all duration-300 scale-100 opacity-100"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      Update Commission Rate
+                    </h3>
+                    <button
+                      onClick={() => setShowCommissionModal(false)}
+                      className="text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      <Icon icon="solar:close-circle-bold" width={24} />
+                    </button>
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      New Commission Percentage
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={newCommission}
+                        onChange={(e) => setNewCommission(e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                        placeholder="Enter percentage"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                      />
+                      <span className="absolute right-3 top-3 text-gray-500">
+                        %
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={() => setShowCommissionModal(false)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={updateCommission}
+                      className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 flex items-center gap-2"
+                    >
+                      <Icon icon="solar:check-circle-bold" width={20} />
+                      Update Commission
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Mark as Paid Modal */}
+            {showPaymentModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-2xl p-6 w-96">
+                  <h3 className="text-xl font-semibold mb-4">
+                    Confirm Payment
+                  </h3>
+                  <p className="mb-4">
+                    Are you sure you want to mark this payment as paid?
+                  </p>
+                  <div className="flex justify-end gap-4">
+                    <button
+                      onClick={() => setShowPaymentModal(false)}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={markAsPaid}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
