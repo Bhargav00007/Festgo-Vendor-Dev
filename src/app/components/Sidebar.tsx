@@ -9,6 +9,8 @@ import { MdOutlineBeachAccess } from "react-icons/md";
 import { LuUsersRound } from "react-icons/lu";
 import { LuPartyPopper } from "react-icons/lu";
 import { LiaCookieBiteSolid } from "react-icons/lia";
+import { PiFlagBannerFold } from "react-icons/pi";
+
 import { LuBuilding2 } from "react-icons/lu";
 import { TbBus } from "react-icons/tb";
 
@@ -138,6 +140,14 @@ const SidebarMenu = () => {
             component={<Link href="/festbite" />}
           >
             FestBite{" "}
+          </MenuItem>
+
+          <MenuItem
+            icon={<PiFlagBannerFold size={22} />}
+            className={getMenuItemClass("adminbanner")}
+            component={<Link href="/adminbanner" />}
+          >
+            Admin Banner
           </MenuItem>
 
           <MenuItem
