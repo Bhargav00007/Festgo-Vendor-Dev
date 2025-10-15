@@ -29,7 +29,7 @@ function Modal({
   if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-500 flex items-center justify-center">
+    <div className="fixed inset-0 z-[500] flex items-center justify-center">
       <div
         className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ${
           open ? "opacity-100" : "opacity-0"
@@ -76,8 +76,43 @@ export default function AdminBannerPage() {
     []
   );
 
+  // Fetch banner on mount
+  useEffect(() => {
+    const fetchBanner = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(
+          "https://server.festgo.in/api/homescreen-banner/",
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token ? `Bearer ${token}` : "",
+            },
+          }
+        );
+
+        if (!res.ok) throw new Error("Failed to fetch banner");
+        const data = await res.json();
+
+        if (data?.data?.content) {
+          setBanner(data.data.content);
+        } else {
+          setBanner("");
+        }
+      } catch (err) {
+        toast.error("Error fetching banner");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBanner();
+  }, [token]);
+
+  // Save or update banner
   const handleSave = async () => {
     if (!newContent.trim()) return toast.error("Content cannot be empty");
+
     try {
       const res = await fetch(
         "https://server.festgo.in/api/homescreen-banner/upsert",
@@ -90,8 +125,11 @@ export default function AdminBannerPage() {
           body: JSON.stringify({ content: newContent }),
         }
       );
+
       if (!res.ok) throw new Error("Failed to update banner");
+
       toast.success("Banner updated successfully");
+      setBanner(newContent);
       setModalOpen(false);
     } catch (err) {
       toast.error("Error updating banner");
@@ -101,6 +139,7 @@ export default function AdminBannerPage() {
   return (
     <div className="mx-auto max-w-5xl p-6 my-20">
       <ToastContainer />
+
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -111,17 +150,39 @@ export default function AdminBannerPage() {
         </p>
       </div>
 
-      {/* Create Button */}
-      <button
-        onClick={() => {
-          setNewContent(banner);
-          setModalOpen(true);
-        }}
-        className="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700 cursor-pointer"
-      >
-        <Plus className="h-5 w-5" />{" "}
-        {banner ? "Update Banner" : "Create Banner"}
-      </button>
+      {/* Loader */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center mt-10">
+          <BarLoader color="#2563eb" />
+          <p className="text-gray-600 mt-4">Loading banner...</p>
+        </div>
+      ) : (
+        <>
+          {/* Banner Display */}
+          <div className="mb-8 mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-800 mb-2">
+              Current Banner Content
+            </h2>
+            {banner ? (
+              <p className="text-gray-700 whitespace-pre-wrap">{banner}</p>
+            ) : (
+              <p className="text-gray-500 italic">No banner set yet.</p>
+            )}
+          </div>
+
+          {/* Create / Update Button */}
+          <button
+            onClick={() => {
+              setNewContent(banner);
+              setModalOpen(true);
+            }}
+            className="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700 cursor-pointer"
+          >
+            <Plus className="h-5 w-5" />{" "}
+            {banner ? "Update Banner" : "Create Banner"}
+          </button>
+        </>
+      )}
 
       {/* Modal */}
       <Modal
