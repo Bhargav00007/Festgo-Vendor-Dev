@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Trash } from "lucide-react";
 import { BarLoader } from "react-spinners";
 
 function Modal({
@@ -64,9 +64,9 @@ function Modal({
 
 export default function AdminBannerPage() {
   const [loading, setLoading] = useState(true);
-  const [banner, setBanner] = useState<string>("");
+  const [banners, setBanners] = useState<string[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [newContent, setNewContent] = useState("");
+  const [newBanner, setNewBanner] = useState("");
 
   const token = useMemo(
     () =>
@@ -94,13 +94,13 @@ export default function AdminBannerPage() {
         if (!res.ok) throw new Error("Failed to fetch banner");
         const data = await res.json();
 
-        if (data?.data?.content) {
-          setBanner(data.data.content);
+        if (Array.isArray(data?.data?.content)) {
+          setBanners(data.data.content);
         } else {
-          setBanner("");
+          setBanners([]);
         }
       } catch (err) {
-        toast.error("Error fetching banner");
+        toast.error("Error fetching banners");
       } finally {
         setLoading(false);
       }
@@ -109,9 +109,11 @@ export default function AdminBannerPage() {
     fetchBanner();
   }, [token]);
 
-  // Save or update banner
+  // Save (Add new banner)
   const handleSave = async () => {
-    if (!newContent.trim()) return toast.error("Content cannot be empty");
+    if (!newBanner.trim()) return toast.error("Content cannot be empty");
+
+    const updatedBanners = [...banners, newBanner.trim()];
 
     try {
       const res = await fetch(
@@ -122,17 +124,43 @@ export default function AdminBannerPage() {
             "Content-Type": "application/json",
             Authorization: token ? `Bearer ${token}` : "",
           },
-          body: JSON.stringify({ content: newContent }),
+          body: JSON.stringify({ content: updatedBanners }),
         }
       );
 
       if (!res.ok) throw new Error("Failed to update banner");
 
-      toast.success("Banner updated successfully");
-      setBanner(newContent);
+      toast.success("New banner added successfully");
+      setBanners(updatedBanners);
       setModalOpen(false);
+      setNewBanner("");
     } catch (err) {
       toast.error("Error updating banner");
+    }
+  };
+
+  // Delete a banner
+  const handleDelete = async (index: number) => {
+    const updatedBanners = banners.filter((_, i) => i !== index);
+    try {
+      const res = await fetch(
+        "https://server.festgo.in/api/homescreen-banner/upsert",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+          body: JSON.stringify({ content: updatedBanners }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to delete banner");
+
+      toast.success("Banner deleted successfully");
+      setBanners(updatedBanners);
+    } catch (err) {
+      toast.error("Error deleting banner");
     }
   };
 
@@ -146,7 +174,7 @@ export default function AdminBannerPage() {
           Admin Banner
         </h1>
         <p className="mt-2 text-lg text-gray-600">
-          Manage the main banner content displayed on the FestGo homepage
+          Manage all homepage banners displayed on FestGo
         </p>
       </div>
 
@@ -154,32 +182,44 @@ export default function AdminBannerPage() {
       {loading ? (
         <div className="flex flex-col items-center justify-center mt-10">
           <BarLoader color="#2563eb" />
-          <p className="text-gray-600 mt-4">Loading banner...</p>
+          <p className="text-gray-600 mt-4">Loading banners...</p>
         </div>
       ) : (
         <>
-          {/* Banner Display */}
+          {/* Banner List */}
           <div className="mb-8 mt-6 rounded-xl border border-gray-200 bg-gray-50 p-5 shadow-sm">
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">
-              Current Banner Content
+            <h2 className="text-xl font-semibold text-gray-800 mb-3">
+              Current Banners
             </h2>
-            {banner ? (
-              <p className="text-gray-700 whitespace-pre-wrap">{banner}</p>
+            {banners.length > 0 ? (
+              <ul className="space-y-3">
+                {banners.map((b, i) => (
+                  <li
+                    key={i}
+                    className="flex justify-between items-center border border-gray-200 rounded-lg bg-white p-3 shadow-sm"
+                  >
+                    <p className="text-gray-700">{b}</p>
+                    <button
+                      onClick={() => handleDelete(i)}
+                      className="text-red-500 hover:text-red-700 cursor-pointer"
+                      title="Delete Banner"
+                    >
+                      <Trash className="h-5 w-5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
             ) : (
-              <p className="text-gray-500 italic">No banner set yet.</p>
+              <p className="text-gray-500 italic">No banners set yet.</p>
             )}
           </div>
 
-          {/* Create / Update Button */}
+          {/* Add Button */}
           <button
-            onClick={() => {
-              setNewContent(banner);
-              setModalOpen(true);
-            }}
+            onClick={() => setModalOpen(true)}
             className="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2 text-white font-semibold shadow-md hover:bg-blue-700 cursor-pointer"
           >
-            <Plus className="h-5 w-5" />{" "}
-            {banner ? "Update Banner" : "Create Banner"}
+            <Plus className="h-5 w-5" /> Add New Banner
           </button>
         </>
       )}
@@ -188,7 +228,7 @@ export default function AdminBannerPage() {
       <Modal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title="Set Admin Banner"
+        title="Add New Banner"
         actionArea={
           <>
             <button
@@ -207,9 +247,9 @@ export default function AdminBannerPage() {
         }
       >
         <textarea
-          value={newContent}
-          onChange={(e) => setNewContent(e.target.value)}
-          placeholder="Enter banner content"
+          value={newBanner}
+          onChange={(e) => setNewBanner(e.target.value)}
+          placeholder="Enter new banner text"
           className="w-full rounded-lg border border-gray-300 px-3 py-2 h-32"
         />
       </Modal>
