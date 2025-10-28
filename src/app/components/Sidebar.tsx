@@ -149,6 +149,13 @@ const SidebarMenu = () => {
           >
             Admin Banner
           </MenuItem>
+          <MenuItem
+            icon={<LuUsersRound size={22} />}
+            className={getMenuItemClass("/users")}
+            component={<Link href="/users" />}
+          >
+            Users Management
+          </MenuItem>
 
           <MenuItem
             icon={<LuUsersRound size={22} />}
