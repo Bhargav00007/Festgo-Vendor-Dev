@@ -124,7 +124,7 @@ export default function AdminOffersPage() {
       const res = await fetch(
         `https://server.festgo.in/api/offers/${action}/${offer.id}`,
         {
-          method: "POST",
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: token ? `Bearer ${token}` : "",
