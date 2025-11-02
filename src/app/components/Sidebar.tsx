@@ -144,10 +144,10 @@ const SidebarMenu = () => {
 
           <MenuItem
             icon={<PiFlagBannerFold size={22} />}
-            className={getMenuItemClass("adminbanner")}
-            component={<Link href="/adminbanner" />}
+            className={getMenuItemClass("adminhome")}
+            component={<Link href="/adminhome" />}
           >
-            Admin Banner
+            Admin Home
           </MenuItem>
           <MenuItem
             icon={<LuUsersRound size={22} />}

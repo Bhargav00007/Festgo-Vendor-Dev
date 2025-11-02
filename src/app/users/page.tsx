@@ -29,6 +29,10 @@ interface UserType {
 export default function UsersPage() {
   const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [page, setPage] = useState<number>(1);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+
   const router = useRouter();
 
   const token = useMemo(
@@ -39,11 +43,13 @@ export default function UsersPage() {
     []
   );
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (pageNumber: number, append = false) => {
     try {
-      setLoading(true);
+      if (append) setLoadingMore(true);
+      else setLoading(true);
+
       const res = await fetch(
-        "https://server.festgo.in/api/admin/users?page=1&limit=10",
+        `https://server.festgo.in/api/admin/users?page=${pageNumber}&limit=10`,
         {
           headers: { Authorization: token ? `Bearer ${token}` : "" },
           cache: "no-store",
@@ -51,18 +57,36 @@ export default function UsersPage() {
       );
       if (!res.ok) throw new Error("Failed to fetch users");
       const data = await res.json();
-      setUsers(data?.success && Array.isArray(data.data) ? data.data : []);
+
+      const newUsers =
+        data?.success && Array.isArray(data.data) ? data.data : [];
+
+      if (append) {
+        setUsers((prev) => [...prev, ...newUsers]);
+      } else {
+        setUsers(newUsers);
+      }
+
+      // if less than 10 users returned, no more pages
+      setHasMore(newUsers.length === 10);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error fetching users");
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleShowMore = async () => {
+    const nextPage = page + 1;
+    await fetchUsers(nextPage, true);
+    setPage(nextPage);
+  };
 
   return (
     <div className="mx-auto max-w-5xl p-6 my-20">
@@ -99,85 +123,104 @@ export default function UsersPage() {
           No users found.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-gray-300 bg-white">
-          <div className="m-4">
-            <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-              <Users className="h-6 w-6 text-blue-600" /> User List
-            </h2>
-            <p className="text-gray-600">Showing 10 users per page</p>
-          </div>
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-100 border-b border-gray-300">
-              <tr>
-                {[
-                  "S.No",
-                  "Profile",
-                  "Name",
-                  "Email",
-                  "Phone",
-                  "Gender",
-                  "State",
-                  "Referral",
-                  "Login Type",
-                  "Joined On",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-xs text-gray-500 uppercase"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {users.map((u, index) => (
-                <tr
-                  key={u.id}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => router.push(`/users/${u.id}`)}
-                >
-                  <td className="px-4 py-3">{index + 1}</td>
-                  <td className="px-4 py-3">
-                    <img
-                      src={u.image_url || "/profiles/user-1.jpg"}
-                      alt={u.fullName || "User"}
-                      width={40}
-                      height={40}
-                      className="rounded-full border border-gray-200 object-cover"
-                    />
-                  </td>
-                  <td className="px-4 py-3 font-medium text-gray-800">
-                    {u.fullName || "User"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {u.email || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {u.number || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {u.gender || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {u.state || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {u.referralCode || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
-                    {u.logintype || "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
-                    {u.createdAt
-                      ? new Date(u.createdAt).toLocaleDateString()
-                      : "-"}
-                  </td>
+        <>
+          <div className="overflow-x-auto rounded-xl border border-gray-300 bg-white">
+            <div className="m-4">
+              <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="h-6 w-6 text-blue-600" /> User List
+              </h2>
+              <p className="text-gray-600">Showing {users.length} users</p>
+            </div>
+            <table className="w-full text-left border-collapse">
+              <thead className="bg-gray-100 border-b border-gray-300">
+                <tr>
+                  {[
+                    "S.No",
+                    "Profile",
+                    "Name",
+                    "Email",
+                    "Phone",
+                    "Gender",
+                    "State",
+                    "Referral",
+                    "Login Type",
+                    "Joined On",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-4 py-3 text-xs text-gray-500 uppercase"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {users.map((u, index) => (
+                  <tr
+                    key={u.id}
+                    className="hover:bg-gray-50 cursor-pointer"
+                    onClick={() => router.push(`/users/${u.id}`)}
+                  >
+                    <td className="px-4 py-3">{index + 1}</td>
+                    <td className="px-4 py-3">
+                      <img
+                        src={u.image_url || "/profiles/user-1.jpg"}
+                        alt={u.fullName || "User"}
+                        width={40}
+                        height={40}
+                        className="rounded-full border border-gray-200 object-cover"
+                      />
+                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-800">
+                      {u.fullName || "User"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {u.email || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {u.number || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {u.gender || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {u.state || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {u.referralCode || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700">
+                      {u.logintype || "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {u.createdAt
+                        ? new Date(u.createdAt).toLocaleDateString()
+                        : "-"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Show More Button */}
+          {hasMore && (
+            <div className="flex justify-center mt-6">
+              <button
+                onClick={handleShowMore}
+                disabled={loadingMore}
+                className={`px-6 py-2 rounded-lg text-white font-medium transition ${
+                  loadingMore
+                    ? "bg-blue-400 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700"
+                }`}
+              >
+                {loadingMore ? "Loading..." : "Show More"}
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

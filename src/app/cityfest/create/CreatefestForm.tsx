@@ -133,14 +133,17 @@ export default function CreateFestForm() {
         ...(categoryId ? { categoryId } : {}),
       };
 
-      const res = await fetch("https://server.festgo.in/api/city-fests", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
+      const res = await fetch(
+        "https://server.festgo.in/api/city-fests/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       const data = await res.json();
       if (data.success) {
