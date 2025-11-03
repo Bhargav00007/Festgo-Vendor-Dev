@@ -8,7 +8,11 @@ import { fetchVendorsWithProperties, Vendor } from "../lib/vendorproperties"; //
 
 export default function VendorListPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "properties">("name");
+  const [showSortMenu, setShowSortMenu] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -27,6 +31,34 @@ export default function VendorListPage() {
       })
       .finally(() => setLoading(false));
   }, [router]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    const filtered = vendors.filter(
+      (vendor) =>
+        vendor.username?.toLowerCase().includes(value.toLowerCase()) ||
+        vendor.email?.toLowerCase().includes(value.toLowerCase()) ||
+        vendor.number?.includes(value)
+    );
+    setFilteredVendors(filtered);
+  };
+
+  const handleSort = (type: "name" | "properties") => {
+    setSortBy(type);
+    const sorted = [...filteredVendors].sort((a, b) => {
+      if (type === "name") {
+        return (a.username || "").localeCompare(b.username || "");
+      } else {
+        return (b.propertyCount || 0) - (a.propertyCount || 0);
+      }
+    });
+    setFilteredVendors(sorted);
+    setShowSortMenu(false);
+  };
+
+  useEffect(() => {
+    setFilteredVendors(vendors);
+  }, [vendors]);
 
   if (loading)
     return (
@@ -152,7 +184,7 @@ export default function VendorListPage() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-xl font-semibold text-gray-900">
                   Vendor Directory
@@ -160,6 +192,84 @@ export default function VendorListPage() {
                 <p className="mt-1 text-sm text-gray-500">
                   Complete list of all registered vendors
                 </p>
+              </div>
+              <div className="flex items-center space-x-3">
+                {/* Search Box */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search vendors..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <div className="absolute right-3 top-2.5 text-gray-400">
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Sort Button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowSortMenu(!showSortMenu)}
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
+                  >
+                    <svg
+                      className="w-5 h-5 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+                      />
+                    </svg>
+                    <span>Sort</span>
+                  </button>
+
+                  {/* Sort Menu */}
+                  {showSortMenu && (
+                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                      <div className="py-1">
+                        <button
+                          onClick={() => handleSort("name")}
+                          className={`block px-4 py-2 text-sm w-full text-left ${
+                            sortBy === "name"
+                              ? "bg-blue-50 text-blue-700"
+                              : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          Sort by Name
+                        </button>
+                        <button
+                          onClick={() => handleSort("properties")}
+                          className={`block px-4 py-2 text-sm w-full text-left ${
+                            sortBy === "properties"
+                              ? "bg-blue-50 text-blue-700"
+                              : "text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          Sort by Properties
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -187,7 +297,7 @@ export default function VendorListPage() {
                 </tr>
               </thead>
               <tbody>
-                {vendors.map((vendor, index) => {
+                {filteredVendors.map((vendor, index) => {
                   const imageIndex = (index % 12) + 1;
                   const profileSrc = `/profiles/user-${imageIndex}.jpg`;
 
@@ -279,7 +389,7 @@ export default function VendorListPage() {
           {/* Tablet View */}
           <div className="hidden md:block lg:hidden">
             <div className="grid gap-4 p-6">
-              {vendors.map((vendor, index) => {
+              {filteredVendors.map((vendor, index) => {
                 const imageIndex = (index % 12) + 1;
                 const profileSrc = `/profiles/user-${imageIndex}.jpg`;
 
@@ -332,7 +442,7 @@ export default function VendorListPage() {
           {/* Mobile View */}
           <div className="md:hidden">
             <div className="space-y-3 p-4">
-              {vendors.map((vendor, index) => {
+              {filteredVendors.map((vendor, index) => {
                 const imageIndex = (index % 12) + 1;
                 const profileSrc = `/profiles/user-${imageIndex}.jpg`;
 
