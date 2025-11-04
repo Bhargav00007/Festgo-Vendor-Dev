@@ -121,15 +121,12 @@ export default function EventTypesPage() {
   const fetchEventTypes = async () => {
     try {
       setLoading(true);
-      const res = await fetch(
-        "https://server.festgo.in/api/city-fests/categories",
-        {
-          headers: {
-            Authorization: token ? `Bearer ${token}` : "",
-          },
-          cache: "no-store",
-        }
-      );
+      const res = await fetch("https://server.festgo.in/api/city-fests/", {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        cache: "no-store",
+      });
       if (!res.ok) throw new Error("Failed to fetch event types");
       const json = await res.json();
 
