@@ -30,8 +30,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<UserType[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
-  const [hasMore, setHasMore] = useState<boolean>(true);
-  const [loadingMore, setLoadingMore] = useState<boolean>(false);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredUsers, setFilteredUsers] = useState<UserType[]>([]);
   const [sortBy, setSortBy] = useState<"name" | "email" | "date">("date");
@@ -47,11 +46,9 @@ export default function UsersPage() {
     []
   );
 
-  const fetchUsers = async (pageNumber: number, append = false) => {
+  const fetchUsers = async (pageNumber: number) => {
     try {
-      if (append) setLoadingMore(true);
-      else setLoading(true);
-
+      setLoading(true);
       const res = await fetch(
         `https://server.festgo.in/api/admin/users?page=${pageNumber}&limit=10`,
         {
@@ -64,28 +61,24 @@ export default function UsersPage() {
 
       const newUsers =
         data?.success && Array.isArray(data.data) ? data.data : [];
+      setUsers(newUsers);
 
-      if (append) {
-        setUsers((prev) => [...prev, ...newUsers]);
-      } else {
-        setUsers(newUsers);
-      }
-
-      // if less than 10 users returned, no more pages
-      setHasMore(newUsers.length === 10);
+      // Assuming backend sends total pages (else you can calculate if total count is available)
+      setTotalPages(data?.pagination?.totalPages || 1);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error fetching users");
     } finally {
       setLoading(false);
-      setLoadingMore(false);
     }
   };
 
-  // Add search function
   const handleSearch = async (value: string) => {
     setSearchTerm(value);
+    if (!value.trim()) {
+      setFilteredUsers([]);
+      return;
+    }
     try {
-      // Fetch all users for searching
       const res = await fetch(
         `https://server.festgo.in/api/admin/users?limit=100`,
         {
@@ -98,12 +91,11 @@ export default function UsersPage() {
       const allUsers =
         data?.success && Array.isArray(data.data) ? data.data : [];
 
-      // Filter users based on search term
       const filtered = allUsers.filter(
         (user: {
           fullName: string;
           email: string;
-          number: string | string[];
+          number: string;
           state: string;
         }) =>
           user.fullName?.toLowerCase().includes(value.toLowerCase()) ||
@@ -117,7 +109,6 @@ export default function UsersPage() {
     }
   };
 
-  // Add sort function
   const handleSort = (type: "name" | "email" | "date") => {
     setSortBy(type);
     const sorted = [...(searchTerm ? filteredUsers : users)].sort((a, b) => {
@@ -134,30 +125,19 @@ export default function UsersPage() {
           return 0;
       }
     });
-    if (searchTerm) {
-      setFilteredUsers(sorted);
-    } else {
-      setUsers(sorted);
-    }
+    if (searchTerm) setFilteredUsers(sorted);
+    else setUsers(sorted);
     setShowSortMenu(false);
   };
 
   useEffect(() => {
-    const initFetch = async () => {
-      await fetchUsers(page);
-      setFilteredUsers(users);
-    };
-    initFetch();
-  }, []);
+    fetchUsers(page);
+  }, [page]);
 
-  const handleShowMore = async () => {
-    const nextPage = page + 1;
-    await fetchUsers(nextPage, true);
-    setPage(nextPage);
-  };
+  const displayedUsers = searchTerm ? filteredUsers : users;
 
   return (
-    <div className="mx-auto max-w-5xl p-6 my-20">
+    <div className="mx-auto max-w-6xl p-6 my-20 overflow-hidden">
       <ToastContainer />
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -170,6 +150,7 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="flex items-center gap-4 rounded-xl border border-gray-300 bg-white p-4 hover:shadow-sm">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
@@ -182,7 +163,7 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Add search and sort controls */}
+      {/* Search and Sort */}
       <div className="flex flex-col sm:flex-row gap-4 mb-6">
         <div className="relative flex-1">
           <input
@@ -209,6 +190,7 @@ export default function UsersPage() {
           </div>
         </div>
 
+        {/* Sort */}
         <div className="relative">
           <button
             onClick={() => setShowSortMenu(!showSortMenu)}
@@ -260,110 +242,122 @@ export default function UsersPage() {
         </div>
       </div>
 
+      {/* Table Section */}
       {loading ? (
         <div className="flex h-64 items-center justify-center">
           <BarLoader color="#4A90E2" loading={loading} />
         </div>
-      ) : (searchTerm ? filteredUsers : users).length === 0 ? (
+      ) : displayedUsers.length === 0 ? (
         <div className="rounded-2xl border border-gray-300 p-8 text-center">
           No users found.
         </div>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-gray-300 bg-white">
-            <div className="m-4">
-              <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-                <Users className="h-6 w-6 text-blue-600" /> User List
-              </h2>
-              <p className="text-gray-600">Showing {users.length} users</p>
-            </div>
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-100 border-b border-gray-300">
-                <tr>
-                  {[
-                    "S.No",
-                    "Profile",
-                    "Name",
-                    "Email",
-                    "Phone",
-                    "Gender",
-                    "State",
-                    "Referral",
-                    "Login Type",
-                    "Joined On",
-                  ].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-xs text-gray-500 uppercase"
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {(searchTerm ? filteredUsers : users).map((u, index) => (
-                  <tr
-                    key={u.id}
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => router.push(`/users/${u.id}`)}
-                  >
-                    <td className="px-4 py-3">{index + 1}</td>
-                    <td className="px-4 py-3">
-                      <img
-                        src={u.image_url || "/profiles/user-1.jpg"}
-                        alt={u.fullName || "User"}
-                        width={40}
-                        height={40}
-                        className="rounded-full border border-gray-200 object-cover"
-                      />
-                    </td>
-                    <td className="px-4 py-3 font-medium text-gray-800">
-                      {u.fullName || "User"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {u.email || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {u.number || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {u.gender || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {u.state || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {u.referralCode || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
-                      {u.logintype || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
-                      {u.createdAt
-                        ? new Date(u.createdAt).toLocaleDateString()
-                        : "-"}
-                    </td>
+          {/* Horizontally scrollable table */}
+          <div className="overflow-x-auto w-full border border-gray-300 rounded-xl bg-white">
+            <div className="min-w-[1000px]">
+              <div className="m-4">
+                <h2 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+                  <Users className="h-6 w-6 text-blue-600" /> User List
+                </h2>
+                <p className="text-gray-600">Showing {users.length} users</p>
+              </div>
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-gray-100 border-b border-gray-300">
+                  <tr>
+                    {[
+                      "S.No",
+                      "Profile",
+                      "Name",
+                      "Email",
+                      "Phone",
+                      "Gender",
+                      "State",
+                      "Referral",
+                      "Login Type",
+                      "Joined On",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-xs text-gray-500 uppercase"
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {displayedUsers.map((u, index) => (
+                    <tr
+                      key={u.id}
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => router.push(`/users/${u.id}`)}
+                    >
+                      <td className="px-4 py-3">{index + 1}</td>
+                      <td className="px-4 py-3">
+                        <img
+                          src={u.image_url || "/profiles/user-1.jpg"}
+                          alt={u.fullName || "User"}
+                          width={40}
+                          height={40}
+                          className="rounded-full border border-gray-200 object-cover"
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-medium text-gray-800">
+                        {u.fullName || "User"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {u.email || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {u.number || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {u.gender || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {u.state || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {u.referralCode || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-700">
+                        {u.logintype || "-"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {u.createdAt
+                          ? new Date(u.createdAt).toLocaleDateString()
+                          : "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          {/* Show More Button - Only show when not searching */}
-          {!searchTerm && hasMore && (
-            <div className="flex justify-center mt-6">
-              <button
-                onClick={handleShowMore}
-                disabled={loadingMore}
-                className={`px-6 py-2 rounded-lg text-white font-medium transition ${
-                  loadingMore
-                    ? "bg-blue-400 cursor-not-allowed"
-                    : "bg-blue-600 hover:bg-blue-700"
-                }`}
-              >
-                {loadingMore ? "Loading..." : "Show More"}
-              </button>
+          {/* Horizontally Scrollable Pagination Bar */}
+          {!searchTerm && totalPages > 1 && (
+            <div className="mt-6 overflow-x-auto">
+              <div className="flex justify-center min-w-max pb-2">
+                <div className="flex space-x-2 px-2">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    (num) => (
+                      <button
+                        key={num}
+                        onClick={() => setPage(num)}
+                        className={`px-4 py-2 rounded-lg border transition whitespace-nowrap min-w-[44px] flex items-center justify-center ${
+                          page === num
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    )
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </>
