@@ -4,7 +4,9 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { BarLoader } from "react-spinners";
-import { fetchVendorsWithProperties, Vendor } from "../lib/vendorproperties"; // Update the import path as needed
+import { fetchVendorsWithProperties, Vendor } from "../lib/vendorproperties";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function VendorListPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
@@ -14,6 +16,12 @@ export default function VendorListPage() {
   const [sortBy, setSortBy] = useState<"name" | "properties">("name");
   const [showSortMenu, setShowSortMenu] = useState(false);
   const router = useRouter();
+
+  // Commission state
+  const [commission, setCommission] = useState<number | null>(null);
+  const [loadingCommission, setLoadingCommission] = useState(false);
+  const [showCommissionModal, setShowCommissionModal] = useState(false);
+  const [newCommission, setNewCommission] = useState<string>("");
 
   useEffect(() => {
     const token = localStorage.getItem("vendorToken");
@@ -31,6 +39,68 @@ export default function VendorListPage() {
       })
       .finally(() => setLoading(false));
   }, [router]);
+
+  // Fetch current commission
+  const fetchCommission = async () => {
+    try {
+      const token = localStorage.getItem("vendorToken");
+      if (!token) return;
+      setLoadingCommission(true);
+      const res = await fetch("https://server.festgo.in/api/admin/commission", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch commission");
+      const json = await res.json();
+      const value = json?.data?.commission;
+      setCommission(typeof value === "number" ? value : null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to load commission");
+    } finally {
+      setLoadingCommission(false);
+    }
+  };
+
+  // Update commission
+  const updateCommission = async () => {
+    try {
+      const token = localStorage.getItem("vendorToken");
+      if (!token) {
+        toast.error("Unauthorized");
+        return;
+      }
+      const parsed = parseFloat(newCommission);
+      if (Number.isNaN(parsed) || parsed < 0) {
+        toast.error("Enter a valid commission value");
+        return;
+      }
+      const res = await fetch("https://server.festgo.in/api/admin/commission", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ commission: parsed }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json?.message || "Failed to update");
+      }
+      const updated = json?.data?.commission;
+      setCommission(typeof updated === "number" ? updated : parsed);
+      setShowCommissionModal(false);
+      toast.success(json?.message || "Commission updated");
+    } catch (err) {
+      console.error("Update commission error:", err);
+      toast.error(err instanceof Error ? err.message : "Update failed");
+    }
+  };
+
+  // fetch commission on mount
+  useEffect(() => {
+    fetchCommission();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -69,6 +139,9 @@ export default function VendorListPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 mt-20">
+      {/* Toast container */}
+      <ToastContainer position="top-right" autoClose={3000} />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
@@ -181,6 +254,63 @@ export default function VendorListPage() {
           </div>
         </div>
 
+        {/* Commission Card (new) */}
+        <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
+          {/* keep the three existing cards shown above in their grid cells; the commission card occupies one cell below them */}
+          {/* ...existing three stat cards are unchanged and rendered above; this is the new commission cell */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-purple-100">
+                  <svg
+                    className="w-6 h-6 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2v6h6v-6c0-1.105-1.343-2-3-2zM6 10V8a6 6 0 0112 0v2"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Commission Rate
+                  </p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {loadingCommission ? (
+                      <span className="inline-flex items-center gap-2">
+                        <BarLoader color="#7c3aed" width={60} />
+                      </span>
+                    ) : commission !== null ? (
+                      `${commission}%`
+                    ) : (
+                      "—"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <button
+                  onClick={() => {
+                    setNewCommission(
+                      commission !== null ? String(commission) : ""
+                    );
+                    setShowCommissionModal(true);
+                  }}
+                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors"
+                >
+                  Update
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
@@ -244,7 +374,7 @@ export default function VendorListPage() {
 
                   {/* Sort Menu */}
                   {showSortMenu && (
-                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-500">
                       <div className="py-1">
                         <button
                           onClick={() => handleSort("name")}
@@ -497,6 +627,43 @@ export default function VendorListPage() {
           </div>
         </div>
       </div>
+
+      {/* Commission Modal */}
+      {showCommissionModal && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-500"
+          onClick={() => setShowCommissionModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 w-96 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold mb-3">Update Commission</h3>
+            <label className="text-sm text-gray-600">Commission (%)</label>
+            <input
+              type="number"
+              min="0"
+              className="w-full mt-2 p-2 border rounded"
+              value={newCommission}
+              onChange={(e) => setNewCommission(e.target.value)}
+            />
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => setShowCommissionModal(false)}
+                className="px-4 py-2 rounded text-gray-700 border"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={updateCommission}
+                className="px-4 py-2 rounded bg-purple-600 text-white"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
