@@ -4,8 +4,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Trash2, MoreVertical } from "lucide-react";
 import { BarLoader } from "react-spinners";
+import { useRouter } from "next/navigation";
 
 // ---------------------- Modal Component ----------------------
 function Modal({
@@ -69,6 +70,11 @@ export default function AdminOffersPage() {
   const [offers, setOffers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [selectedOffer, setSelectedOffer] = useState<any>(null);
+  const [openActionMenu, setOpenActionMenu] = useState<number | null>(null);
+
+  const router = useRouter();
 
   const [form, setForm] = useState({
     name: "",
@@ -146,10 +152,33 @@ export default function AdminOffersPage() {
     }
   };
 
+  // Handle Delete Offer
+  const handleDeleteOffer = async () => {
+    if (!selectedOffer) return;
+    try {
+      const res = await fetch(
+        `https://server.festgo.in/api/offers/delete/${selectedOffer.id}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to delete offer");
+      toast.success("Offer deleted successfully");
+      setOffers((prev) => prev.filter((o) => o.id !== selectedOffer.id));
+      setDeleteModal(false);
+    } catch (err) {
+      toast.error("Error deleting offer");
+    }
+  };
+
   // Handle Create Offer
   const handleCreateOffer = async () => {
     try {
-      if (!form.name || !form.discount || !form.promoCode)
+      if (!form.name || !form.discount || !form.promoCode || !form.offerFor)
         return toast.error("Please fill all required fields");
 
       const body = {
@@ -186,10 +215,8 @@ export default function AdminOffersPage() {
         offerFor: "",
       });
 
-      // Refresh offers
-      const newData = await fetch("https://server.festgo.in/api/offers/get");
-      const updatedOffers = await newData.json();
-      setOffers(updatedOffers);
+      // Redirect after creation
+      router.push("/adminhome/adminoffers");
     } catch (err) {
       toast.error("Error creating offer");
     }
@@ -253,7 +280,7 @@ export default function AdminOffersPage() {
                   Status
                 </th>
                 <th className="px-4 py-3 text-center text-gray-700 font-semibold">
-                  Action
+                  Actions
                 </th>
               </tr>
             </thead>
@@ -262,7 +289,7 @@ export default function AdminOffersPage() {
                 offers.map((offer, i) => (
                   <tr
                     key={i}
-                    className="border-b bg-white hover:bg-gray-50 transition-colors"
+                    className="border-b bg-white hover:bg-gray-50 transition-colors relative"
                   >
                     <td className="px-4 py-3 text-gray-800 font-medium">
                       {offer.name}
@@ -292,19 +319,43 @@ export default function AdminOffersPage() {
                     >
                       {offer.status}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center relative">
                       <button
-                        onClick={() => toggleStatus(offer)}
-                        className={`px-3 py-1 rounded-lg font-semibold text-sm ${
-                          offer.status.toLowerCase() === "active"
-                            ? "bg-red-100 text-red-600 hover:bg-red-200"
-                            : "bg-green-100 text-green-600 hover:bg-green-200"
-                        }`}
+                        className="px-3 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 cursor-pointer flex items-center justify-center gap-1 mx-auto"
+                        onClick={() =>
+                          setOpenActionMenu(openActionMenu === i ? null : i)
+                        }
                       >
-                        {offer.status.toLowerCase() === "active"
-                          ? "Deactivate"
-                          : "Activate"}
+                        Actions <MoreVertical className="w-4 h-4" />
                       </button>
+
+                      {openActionMenu === i && (
+                        <div className="absolute right-10 mt-2 w-40 bg-white border border-gray-200 shadow-lg rounded-xl z-50">
+                          <button
+                            onClick={() => toggleStatus(offer)}
+                            className={`block w-full text-left px-4 py-2 text-sm font-medium ${
+                              offer.status.toLowerCase() === "active"
+                                ? "text-red-600 hover:bg-red-50"
+                                : "text-green-600 hover:bg-green-50"
+                            }`}
+                          >
+                            {offer.status.toLowerCase() === "active"
+                              ? "Deactivate"
+                              : "Activate"}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedOffer(offer);
+                              setDeleteModal(true);
+                              setOpenActionMenu(null);
+                            }}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 className="inline-block w-4 h-4 mr-2" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -346,96 +397,172 @@ export default function AdminOffersPage() {
         }
       >
         <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
-            placeholder="Offer Name"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-          <input
-            type="text"
-            placeholder="Discount (e.g., 10%)"
-            value={form.discount}
-            onChange={(e) => setForm({ ...form, discount: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-          <input
-            type="text"
-            placeholder="Promo Code"
-            value={form.promoCode}
-            onChange={(e) => setForm({ ...form, promoCode: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-          <input
-            type="text"
-            placeholder="Offer Type"
-            value={form.type}
-            onChange={(e) => setForm({ ...form, type: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-          <input
-            type="date"
-            placeholder="Booking Start"
-            value={form.bookingWindowStart}
-            onChange={(e) =>
-              setForm({ ...form, bookingWindowStart: e.target.value })
-            }
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-          <input
-            type="date"
-            placeholder="Booking End"
-            value={form.bookingWindowEnd}
-            onChange={(e) =>
-              setForm({ ...form, bookingWindowEnd: e.target.value })
-            }
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-          <input
-            type="date"
-            placeholder="Stay Start"
-            value={form.stayDatesStart}
-            onChange={(e) =>
-              setForm({ ...form, stayDatesStart: e.target.value })
-            }
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-          <input
-            type="date"
-            placeholder="Stay End"
-            value={form.stayDatesEnd}
-            onChange={(e) => setForm({ ...form, stayDatesEnd: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2"
-          />
-          <input
-            type="text"
-            placeholder="Entity IDs (comma separated)"
-            value={form.entityIds}
-            onChange={(e) => setForm({ ...form, entityIds: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2 col-span-2"
-          />
-          <input
-            type="text"
-            placeholder="Entity Names (comma separated)"
-            value={form.entityNames}
-            onChange={(e) => setForm({ ...form, entityNames: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2 col-span-2"
-          />
-          <input
-            type="text"
-            placeholder="Offer For"
-            value={form.offerFor}
-            onChange={(e) => setForm({ ...form, offerFor: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2 col-span-2"
-          />
-          <textarea
-            placeholder="Description"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            className="border border-gray-300 rounded-lg px-3 py-2 h-24 col-span-2"
-          />
+          <label className="flex flex-col text-gray-700">
+            <input
+              type="text"
+              placeholder="Offer Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              className="border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700">
+            <input
+              type="text"
+              placeholder="Discount"
+              value={form.discount}
+              onChange={(e) => setForm({ ...form, discount: e.target.value })}
+              className="border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700">
+            <input
+              type="text"
+              placeholder="Promo Code"
+              value={form.promoCode}
+              onChange={(e) => setForm({ ...form, promoCode: e.target.value })}
+              className="border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700">
+            <input
+              type="text"
+              placeholder="Offer Type"
+              value={form.type}
+              onChange={(e) => setForm({ ...form, type: e.target.value })}
+              className="border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700">
+            Booking Start
+            <input
+              type="date"
+              value={form.bookingWindowStart}
+              onChange={(e) =>
+                setForm({ ...form, bookingWindowStart: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700">
+            Booking End
+            <input
+              type="date"
+              value={form.bookingWindowEnd}
+              onChange={(e) =>
+                setForm({ ...form, bookingWindowEnd: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700">
+            Stay Start
+            <input
+              type="date"
+              value={form.stayDatesStart}
+              onChange={(e) =>
+                setForm({ ...form, stayDatesStart: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700">
+            Stay End
+            <input
+              type="date"
+              value={form.stayDatesEnd}
+              onChange={(e) =>
+                setForm({ ...form, stayDatesEnd: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-3 py-2"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700 col-span-2">
+            <input
+              type="text"
+              value={form.entityIds}
+              onChange={(e) => setForm({ ...form, entityIds: e.target.value })}
+              className="border border-gray-300 rounded-lg px-3 py-2"
+              placeholder="Entity IDs (comma separated)
+"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700 col-span-2">
+            <input
+              type="text"
+              value={form.entityNames}
+              onChange={(e) =>
+                setForm({ ...form, entityNames: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-3 py-2"
+              placeholder="Entity Names (comma separated)
+"
+            />
+          </label>
+
+          <label className="flex flex-col text-gray-700 col-span-2">
+            <select
+              value={form.offerFor}
+              onChange={(e) => setForm({ ...form, offerFor: e.target.value })}
+              className="border border-gray-300 rounded-lg px-3 py-2"
+              aria-placeholder="Offer for"
+            >
+              <option value="">Select Offer For</option>
+              <option value="property">Property</option>
+              <option value="event">Event</option>
+              <option value="beach_fests">Beach Fests</option>
+              <option value="city_fests">City Fests</option>
+            </select>
+          </label>
+
+          <label className="flex flex-col text-gray-700 col-span-2">
+            <textarea
+              placeholder="Description"
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+              className="border border-gray-300 rounded-lg px-3 py-2 h-24"
+            />
+          </label>
         </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        open={deleteModal}
+        onClose={() => setDeleteModal(false)}
+        title="Delete Offer"
+        actionArea={
+          <>
+            <button
+              onClick={() => setDeleteModal(false)}
+              className="rounded-lg border border-gray-300 px-4 py-2 hover:bg-gray-100 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDeleteOffer}
+              className="rounded-lg bg-red-600 px-4 py-2 text-white font-semibold hover:bg-red-700 cursor-pointer"
+            >
+              Delete
+            </button>
+          </>
+        }
+      >
+        <p className="text-gray-700">
+          Are you sure you want to permanently delete{" "}
+          <strong>{selectedOffer?.name}</strong>? This action cannot be undone.
+        </p>
       </Modal>
     </div>
   );
