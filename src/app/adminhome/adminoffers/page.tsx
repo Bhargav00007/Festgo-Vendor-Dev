@@ -157,7 +157,7 @@ export default function AdminOffersPage() {
     if (!selectedOffer) return;
     try {
       const res = await fetch(
-        `https://server.festgo.in/offers/delete/${selectedOffer.id}`,
+        `https://server.festgo.in/api/offers/delete/${selectedOffer.id}`,
         {
           method: "DELETE",
           headers: {

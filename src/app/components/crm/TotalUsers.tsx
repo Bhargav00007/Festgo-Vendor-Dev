@@ -53,7 +53,7 @@ const TotalUsers = () => {
             <h5 className="lg:text-sm text-xl text-gray-600 font-medium">
               Total Users
             </h5>
-            <p className="text-4xl font-extrabold text-gray-900 flex items-center gap-2">
+            <p className="text-4xl font-bold text-gray-900 flex items-center gap-2">
               {loading ? <ImSpinner8 className="animate-spin" /> : totalUsers}
             </p>
           </div>

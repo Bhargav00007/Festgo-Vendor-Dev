@@ -135,7 +135,7 @@ const VendorsProperties = () => {
             <h2 className="text-3xl mb-3 font-bold text-gray-800">
               {loading ? <ImSpinner8 className="animate-spin" /> : totalVendors}
             </h2>
-            <span className="font-semibold border rounded-full border-black/5 dark:border-white/10 py-0.5  leading-[normal] text-xs bg-white rounded-full text-dark dark:text-darklink">
+            <span className="font-semibold border rounded-full border-black/5 dark:border-white/10 px-1  leading-[normal] text-xs bg-white rounded-full text-dark dark:text-darklink">
               <span className="opacity-70">
                 {loading
                   ? "Spinning..."
