@@ -139,7 +139,7 @@ const VendorsProperties = () => {
               <span className="opacity-70">
                 {loading
                   ? "Spinning..."
-                  : `${vendorsWithProperties} have properties`}
+                  : `${vendorsWithProperties} properties`}
               </span>
             </span>
           </div>

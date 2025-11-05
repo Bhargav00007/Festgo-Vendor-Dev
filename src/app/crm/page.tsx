@@ -1,7 +1,8 @@
-import TotalVendors from "../components/crm/TotalVendors";
 import React from "react";
 import type { Metadata } from "next";
+import TotalVendors from "../components/crm/TotalVendors";
 import VendorsProperties from "../components/crm/VendorsProperties";
+import TotalUsers from "../components/crm/TotalUsers";
 
 export const metadata: Metadata = {
   title: "CRM Dashboard",
@@ -11,7 +12,21 @@ export const metadata: Metadata = {
 const Crm = () => {
   return (
     <div className="mx-auto max-w-5xl p-6 my-20">
+      {/* Dashboard Heading */}
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold text-gray-900 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+          Dash Board
+        </h1>
+        <p className="mt-2 text-lg text-gray-600">
+          Manage user and vendor information
+        </p>
+      </div>
+
+      {/* Stats Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className="lg:col-span-4 col-span-12">
+          <TotalUsers />
+        </div>
         <div className="lg:col-span-4 col-span-12">
           <TotalVendors />
         </div>
