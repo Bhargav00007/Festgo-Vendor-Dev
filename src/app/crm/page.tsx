@@ -4,6 +4,7 @@ import TotalVendors from "../components/crm/TotalVendors";
 import VendorsProperties from "../components/crm/VendorsProperties";
 import TotalUsers from "../components/crm/TotalUsers";
 import FestStats from "../components/crm/FestStats";
+import AdminStats from "../components/crm/AdminStats";
 
 export const metadata: Metadata = {
   title: "CRM Dashboard",
@@ -36,6 +37,7 @@ const Crm = () => {
         </div>
       </div>
       <FestStats />
+      <AdminStats />
     </div>
   );
 };

@@ -32,6 +32,7 @@
     "react-pro-sidebar": "^1.1.0",
     "react-spinners": "^0.17.0",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.3.0",
     "tabler": "^1.0.0",
     "tailwind-merge": "^3.3.1"
   },
