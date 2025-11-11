@@ -1,3 +1,4 @@
+/*eslint-disable @typescript-eslint/no-explicit-any*/
 "use client";
 
 import { useEffect, useState } from "react";
@@ -163,6 +164,8 @@ type Property = {
   rooms: Room[];
   createdAt: string;
   updatedAt: string;
+  // new optional field to store step-wise form data for edits
+  strdata?: any;
 };
 
 type Vendor = {
@@ -183,6 +186,9 @@ export default function PropertyDetailPage() {
   const [vendor, setVendor] = useState<Vendor | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProperty, setEditedProperty] = useState<Property | null>(null);
+  const [savingChanges, setSavingChanges] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -247,7 +253,8 @@ export default function PropertyDetailPage() {
     }
   }, [vendorId, propertyId, router]);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
@@ -303,6 +310,173 @@ export default function PropertyDetailPage() {
     },
   ];
 
+  const handleEditClick = () => {
+    setEditedProperty({ ...property! });
+    setIsEditing(true);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setEditedProperty(null);
+  };
+
+  // helper to ensure strdata shape exists
+  const ensureStrdata = (p: Property) => {
+    if (!p.strdata) {
+      p.strdata = {
+        step_1: {},
+        step_2: {},
+        step_3: { amenities: [] },
+        step_4: { rooms: [] },
+        step_5: {},
+        step_6: {},
+        step_7: {},
+      };
+    }
+    return p.strdata;
+  };
+
+  const handlePropertyChange = (field: keyof Property, value: any) => {
+    if (!editedProperty) return;
+    const updated: Property = { ...editedProperty, [field]: value } as Property;
+
+    // sync to strdata.step_1 for core fields
+    const sd = ensureStrdata(updated);
+    try {
+      if (field === "name") sd.step_1.propertyName = value || "";
+      if (field === "email") sd.step_1.email = value || "";
+      if (field === "mobile_number") sd.step_1.mobileNumber = value || "";
+      if (field === "property_built_date") {
+        const year = value ? new Date(value).getFullYear() : "";
+        sd.step_1.builtYear = year ? String(year) : "";
+      }
+      if (field === "star_rating")
+        sd.step_1.hotelStarRating = String(value || "");
+      if (field === "accepting_bookings_since") {
+        const year = value ? new Date(value).getFullYear() : "";
+        sd.step_1.acceptingBookingSince = year ? String(year) : "";
+      }
+      if (field === "cuisines")
+        sd.step_1.cuisines = Array.isArray(value)
+          ? value
+          : String(value || "")
+              .split(",")
+              .map((s: any) => s.trim())
+              .filter(Boolean);
+      // attach back
+      updated.strdata = sd;
+    } catch (err) {
+      // non-blocking
+      console.error("sync strdata step_1 error", err);
+    }
+
+    setEditedProperty(updated);
+  };
+
+  const handleNestedChange = (section: string, field: string, value: any) => {
+    if (!editedProperty) return;
+    const sectionObj = { ...((editedProperty as any)[section] || {}) };
+    sectionObj[field] = value;
+    const updated: any = { ...editedProperty, [section]: sectionObj };
+
+    // sync to strdata for location (step_2) and policies (step_6)
+    const sd = ensureStrdata(updated as Property);
+    try {
+      if (section === "location") {
+        if (field === "city") sd.step_2.city = value || "";
+        if (field === "state") sd.step_2.state = value || "";
+        if (field === "country") sd.step_2.country = value || "";
+        if (field === "pincode") sd.step_2.pincode = value || "";
+        if (field === "locality") sd.step_2.locality = value || "";
+        if (field === "houseNumber") sd.step_2.houseNumber = value || "";
+        if (field === "lat" || field === "lng") {
+          sd.step_2.mapLocation = sd.step_2.mapLocation || {};
+          sd.step_2.mapLocation[field] = value;
+        }
+      }
+      if (section === "policies") {
+        // common mappings
+        if (
+          [
+            "checkInTime",
+            "checkOutTime",
+            "minimumStay",
+            "maximumStay",
+            "cleaningFee",
+            "additionalGuestFee",
+            "securityDeposit",
+          ].includes(field)
+        ) {
+          sd.step_6[field] = value;
+        }
+        if (field === "damagePolicy") {
+          sd.step_6.damagePolicy = {
+            ...(sd.step_6.damagePolicy || {}),
+            ...value,
+          };
+        }
+      }
+      updated.strdata = sd;
+    } catch (err) {
+      console.error("sync strdata nested error", err);
+    }
+
+    setEditedProperty(updated as Property);
+  };
+
+  const handleSaveChanges = async () => {
+    if (!editedProperty) return;
+    try {
+      setSavingChanges(true);
+      const token = localStorage.getItem("vendorToken");
+
+      // ensure strdata present
+      const payload = { ...editedProperty } as any;
+      payload.strdata = ensureStrdata(payload);
+
+      const response = await fetch(
+        `https://server.festgo.in/api/admin/property/${propertyId}/edit`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const json = await response.json();
+
+      if (!response.ok) {
+        throw new Error(json?.message || "Failed to save changes");
+      }
+
+      // update local state with returned data if available, otherwise use editedProperty
+      const updatedPropertyFromServer = json?.data || json;
+      // merge strdata if server didn't return it
+      const finalProperty = {
+        ...editedProperty,
+        ...(typeof updatedPropertyFromServer === "object"
+          ? updatedPropertyFromServer
+          : {}),
+      } as Property;
+      if (!finalProperty.strdata) finalProperty.strdata = payload.strdata;
+
+      setProperty(finalProperty);
+      setIsEditing(false);
+      setEditedProperty(null);
+      toast.success(json?.message || "Property updated successfully!");
+    } catch (error) {
+      console.error("Error saving property:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to save changes"
+      );
+    } finally {
+      setSavingChanges(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -343,18 +517,7 @@ export default function PropertyDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 mt-20">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
+      <ToastContainer position="top-right" autoClose={3000} />
 
       {/* Enhanced Header Section */}
       <div className="bg-white shadow-lg border-b border-gray-200">
@@ -421,11 +584,12 @@ export default function PropertyDetailPage() {
             </nav>
           </div>
 
-          {/* Property Header Card */}
+          {/* Property Header Card with Edit Button - IMPROVED PLACEMENT */}
           <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-6 border border-gray-200">
-            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-              <div className="flex-1">
-                <div className="flex items-center gap-4 mb-4">
+            <div className="flex flex-col gap-6">
+              {/* Top Row: Title and Edit Button */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 flex-1">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
                     <Icon
                       icon="solar:home-2-bold"
@@ -435,7 +599,18 @@ export default function PropertyDetailPage() {
                   </div>
                   <div>
                     <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                      {property.name}
+                      {isEditing ? (
+                        <input
+                          type="text"
+                          value={editedProperty?.name || ""}
+                          onChange={(e) =>
+                            handlePropertyChange("name", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      ) : (
+                        property?.name
+                      )}
                     </h1>
                     <div className="flex flex-wrap items-center gap-4">
                       <div className="flex items-center gap-1">
@@ -445,10 +620,10 @@ export default function PropertyDetailPage() {
                           width={20}
                         />
                         <span className="font-semibold text-gray-900">
-                          {property.star_rating}
+                          {property?.star_rating}
                         </span>
                         <span className="text-gray-600">
-                          Star {property.property_type}
+                          Star {property?.property_type}
                         </span>
                       </div>
                       <div className="flex items-center gap-1">
@@ -458,73 +633,119 @@ export default function PropertyDetailPage() {
                           width={16}
                         />
                         <span className="text-gray-600">
-                          {property.location.city}, {property.location.state}
+                          {property?.location.city}, {property?.location.state}
                         </span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
-                  <span
-                    className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
-                      property.is_completed
-                        ? "bg-green-100 text-green-800 border border-green-200"
-                        : "bg-red-100 text-red-800 border border-red-200"
-                    }`}
-                  >
-                    <Icon
-                      icon={
-                        property.is_completed
-                          ? "solar:check-circle-bold"
-                          : "solar:close-circle-bold"
-                      }
-                      width={16}
-                      className="mr-1.5"
-                    />
-                    {property.is_completed ? "Active" : "Inactive"}
-                  </span>
-
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                    <Icon
-                      icon="solar:chart-bold"
-                      width={16}
-                      className="mr-1.5"
-                    />
-                    {property.status}% Complete
-                  </span>
-
-                  {property.channelManager && (
-                    <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
-                      <Icon
-                        icon="solar:settings-bold"
-                        width={16}
-                        className="mr-1.5"
-                      />
-                      {property.channelManagerName}
-                    </span>
+                {/* Edit/Cancel/Save Buttons - TOP RIGHT CORNER */}
+                <div className="hidden md:flex gap-2">
+                  {!isEditing ? (
+                    <button
+                      onClick={handleEditClick}
+                      className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors shadow-md"
+                      title="Edit property details"
+                    >
+                      <Icon icon="solar:pen-bold" width={18} />
+                      <span className="font-medium">Edit</span>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleCancel}
+                        className="px-4 py-2.5 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 flex items-center gap-2 transition-colors shadow-md"
+                        title="Cancel editing"
+                      >
+                        <Icon icon="solar:close-circle-bold" width={18} />
+                        <span className="font-medium">Cancel</span>
+                      </button>
+                      <button
+                        onClick={handleSaveChanges}
+                        disabled={savingChanges}
+                        className="px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 flex items-center gap-2 transition-colors shadow-md"
+                        title="Save changes to property"
+                      >
+                        <Icon icon="solar:check-circle-bold" width={18} />
+                        <span className="font-medium">
+                          {savingChanges ? "Saving..." : "Save"}
+                        </span>
+                      </button>
+                    </>
                   )}
-
-                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
-                    <Icon icon="solar:bed-bold" width={16} className="mr-1.5" />
-                    {property.rooms?.length || 0} Room Types
-                  </span>
                 </div>
               </div>
 
-              <div className="flex flex-row lg:flex-col gap-4 lg:w-48">
-                <div className="bg-white rounded-xl p-4 text-center flex-1 shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-gray-900">
-                    {property.current_step}
+              {/* Status Badges */}
+              <div className="flex flex-wrap gap-3">
+                <span
+                  className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium ${
+                    property?.is_completed
+                      ? "bg-green-100 text-green-800 border border-green-200"
+                      : "bg-red-100 text-red-800 border border-red-200"
+                  }`}
+                >
+                  <Icon
+                    icon={
+                      property?.is_completed
+                        ? "solar:check-circle-bold"
+                        : "solar:close-circle-bold"
+                    }
+                    width={16}
+                    className="mr-1.5"
+                  />
+                  {property?.is_completed ? "Active" : "Inactive"}
+                </span>
+
+                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                  <Icon icon="solar:chart-bold" width={16} className="mr-1.5" />
+                  {property.status}% Complete
+                </span>
+
+                {property.channelManager && (
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                    <Icon
+                      icon="solar:settings-bold"
+                      width={16}
+                      className="mr-1.5"
+                    />
+                    {property.channelManagerName}
+                  </span>
+                )}
+
+                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800 border border-indigo-200">
+                  <Icon icon="solar:bed-bold" width={16} className="mr-1.5" />
+                  {property.rooms?.length || 0} Room Types
+                </span>
+              </div>
+              {/* Mobile: place edit controls under the title */}
+              <div className="md:hidden">
+                {!isEditing ? (
+                  <button
+                    onClick={handleEditClick}
+                    className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg mb-2 flex items-center justify-center "
+                  >
+                    <Icon icon="solar:pen-bold" width={22} />{" "}
+                    <span className="ml-2">Edit vendor Propety</span>
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCancel}
+                      className="flex-1 px-4 py-2.5 bg-gray-300 rounded-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveChanges}
+                      disabled={savingChanges}
+                      className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg"
+                    >
+                      {savingChanges ? "Saving..." : "Save"}
+                    </button>
                   </div>
-                  <div className="text-sm text-gray-600">Current Step</div>
-                </div>
-                <div className="bg-white rounded-xl p-4 text-center flex-1 shadow-sm border border-gray-200">
-                  <div className="text-2xl font-bold text-green-600">
-                    {property.status}%
-                  </div>
-                  <div className="text-sm text-gray-600">Progress</div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -572,7 +793,6 @@ export default function PropertyDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Info */}
             <div className="lg:col-span-2 space-y-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
@@ -584,60 +804,167 @@ export default function PropertyDetailPage() {
                   Property Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Property Type */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-gray-500">
                       Property Type
                     </label>
-                    <p className="text-gray-900 capitalize font-medium">
-                      {property.property_type}
-                    </p>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedProperty?.property_type || ""}
+                        onChange={(e) =>
+                          handlePropertyChange("property_type", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900 capitalize font-medium">
+                        {property?.property_type}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Star Rating */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-gray-500">
                       Star Rating
                     </label>
-                    <p className="text-gray-900 font-medium">
-                      {property.star_rating} Stars
-                    </p>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={editedProperty?.star_rating || ""}
+                        onChange={(e) =>
+                          handlePropertyChange(
+                            "star_rating",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium">
+                        {property?.star_rating} Stars
+                      </p>
+                    )}
                   </div>
+
+                  {/* Built Date */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-gray-500">
                       Built Date
                     </label>
-                    <p className="text-gray-900 font-medium">
-                      {formatDate(property.property_built_date)}
-                    </p>
+                    {isEditing ? (
+                      <input
+                        type="date"
+                        value={
+                          editedProperty?.property_built_date
+                            ? new Date(editedProperty.property_built_date)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handlePropertyChange(
+                            "property_built_date",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium">
+                        {formatDate(property?.property_built_date)}
+                      </p>
+                    )}
                   </div>
+
+                  {/* Accepting Bookings Since */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-gray-500">
                       Accepting Bookings Since
                     </label>
-                    <p className="text-gray-900 font-medium">
-                      {formatDate(property.accepting_bookings_since)}
-                    </p>
+                    {isEditing ? (
+                      <input
+                        type="date"
+                        value={
+                          editedProperty?.accepting_bookings_since
+                            ? new Date(editedProperty.accepting_bookings_since)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          handlePropertyChange(
+                            "accepting_bookings_since",
+                            e.target.value
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900 font-medium">
+                        {formatDate(property?.accepting_bookings_since)}
+                      </p>
+                    )}
                   </div>
-                  <div className="space-y-1">
+
+                  {/* Cuisines */}
+                  <div className="space-y-1 md:col-span-2">
                     <label className="text-sm font-medium text-gray-500">
                       Cuisines
                     </label>
-                    <p className="text-gray-900 capitalize font-medium">
-                      {property.cuisines?.join(", ") || "Not specified"}
-                    </p>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedProperty?.cuisines?.join(", ") || ""}
+                        onChange={(e) =>
+                          handlePropertyChange(
+                            "cuisines",
+                            e.target.value.split(",").map((c) => c.trim())
+                          )
+                        }
+                        placeholder="Enter cuisines separated by commas"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-gray-900 capitalize font-medium">
+                        {property?.cuisines?.join(", ") || "Not specified"}
+                      </p>
+                    )}
                   </div>
+
+                  {/* WhatsApp Same as Mobile */}
                   <div className="space-y-1">
                     <label className="text-sm font-medium text-gray-500">
                       WhatsApp Same as Mobile
                     </label>
-                    <p className="text-gray-900 font-medium">
-                      {property.sameAsWhatsapp ? "Yes" : "No"}
-                    </p>
+                    {isEditing ? (
+                      <select
+                        value={editedProperty?.sameAsWhatsapp ? "yes" : "no"}
+                        onChange={(e) =>
+                          handlePropertyChange(
+                            "sameAsWhatsapp",
+                            e.target.value === "yes"
+                          )
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="yes">Yes</option>
+                        <option value="no">No</option>
+                      </select>
+                    ) : (
+                      <p className="text-gray-900 font-medium">
+                        {property?.sameAsWhatsapp ? "Yes" : "No"}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
-              <PropertyImageGallery
-                vendorId={vendorId}
-                propertyId={propertyId}
-              />{" "}
+
+              {/* Description */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
                   <Icon
@@ -647,11 +974,23 @@ export default function PropertyDetailPage() {
                   />
                   Description
                 </h3>
-                <p className="text-gray-700 leading-relaxed">
-                  {property.description}
-                </p>
+                {isEditing ? (
+                  <textarea
+                    value={editedProperty?.description || ""}
+                    onChange={(e) =>
+                      handlePropertyChange("description", e.target.value)
+                    }
+                    rows={5}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                ) : (
+                  <p className="text-gray-700 leading-relaxed">
+                    {property?.description}
+                  </p>
+                )}
               </div>
-              {/* Property Photos Section */}
+
+              {/* Contact Information */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                   <Icon
@@ -662,64 +1001,156 @@ export default function PropertyDetailPage() {
                   Contact Information
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="flex items-center gap-4 p-4 bg-green-50 rounded-xl border border-green-200">
-                    <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  {/* Mobile */}
+                  <div
+                    className={`flex items-center gap-4 p-4 rounded-xl border ${
+                      isEditing
+                        ? "bg-white border-gray-300"
+                        : "bg-green-50 border-green-200"
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                        isEditing ? "bg-gray-100" : "bg-green-100"
+                      }`}
+                    >
                       <Icon
                         icon="solar:phone-bold"
-                        className="text-green-600"
+                        className={
+                          isEditing ? "text-gray-600" : "text-green-600"
+                        }
                         width={24}
                       />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-500">
                         Mobile
                       </label>
-                      <p className="text-gray-900 font-semibold">
-                        {property.mobile_number}
-                      </p>
+                      {isEditing ? (
+                        <input
+                          type="tel"
+                          value={editedProperty?.mobile_number || ""}
+                          onChange={(e) =>
+                            handlePropertyChange(
+                              "mobile_number",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 font-semibold">
+                          {property?.mobile_number}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  {/* Landline */}
+                  <div
+                    className={`flex items-center gap-4 p-4 rounded-xl border ${
+                      isEditing
+                        ? "bg-white border-gray-300"
+                        : "bg-blue-50 border-blue-200"
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                        isEditing ? "bg-gray-100" : "bg-blue-100"
+                      }`}
+                    >
                       <Icon
                         icon="solar:phone-bold"
-                        className="text-blue-600"
+                        className={
+                          isEditing ? "text-gray-600" : "text-blue-600"
+                        }
                         width={24}
                       />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-500">
                         Landline
                       </label>
-                      <p className="text-gray-900 font-semibold">
-                        {property.landline_number || "Not provided"}
-                      </p>
+                      {isEditing ? (
+                        <input
+                          type="tel"
+                          value={editedProperty?.landline_number || ""}
+                          onChange={(e) =>
+                            handlePropertyChange(
+                              "landline_number",
+                              e.target.value
+                            )
+                          }
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 font-semibold">
+                          {property?.landline_number || "Not provided"}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 p-4 bg-red-50 rounded-xl border border-red-200 md:col-span-2">
-                    <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  {/* Email */}
+                  <div
+                    className={`flex items-center gap-4 p-4 rounded-xl border md:col-span-2 ${
+                      isEditing
+                        ? "bg-white border-gray-300"
+                        : "bg-red-50 border-red-200"
+                    }`}
+                  >
+                    <div
+                      className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                        isEditing ? "bg-gray-100" : "bg-red-100"
+                      }`}
+                    >
                       <Icon
                         icon="solar:letter-bold"
-                        className="text-red-600"
+                        className={isEditing ? "text-gray-600" : "text-red-600"}
                         width={24}
                       />
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <label className="text-sm font-medium text-gray-500">
                         Email
                       </label>
-                      <p className="text-gray-900 font-semibold">
-                        {property.email}
-                      </p>
+                      {isEditing ? (
+                        <input
+                          type="email"
+                          value={editedProperty?.email || ""}
+                          onChange={(e) =>
+                            handlePropertyChange("email", e.target.value)
+                          }
+                          className="w-full px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 mt-1"
+                        />
+                      ) : (
+                        <p className="text-gray-900 font-semibold">
+                          {property?.email}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
+
+              {/* Property Photos Section */}
+              <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                  <Icon
+                    icon="solar:gallery-bold-duotone"
+                    className="text-purple-600"
+                    width={24}
+                  />
+                  Property Photos
+                </h3>
+                <PropertyImageGallery
+                  vendorId={vendorId}
+                  propertyId={propertyId}
+                />
+              </div>
             </div>
 
-            {/* Sidebar */}
+            {/* Sidebar - Quick Stats and Vendor Info */}
             <div className="space-y-6">
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
@@ -1135,6 +1566,7 @@ export default function PropertyDetailPage() {
         {activeTab === "policies" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
+              {/* Check-in/Check-out Section */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                   <Icon
@@ -1145,37 +1577,106 @@ export default function PropertyDetailPage() {
                   Check-in/Check-out
                 </h3>
                 <div className="space-y-4">
+                  {/* Check-in Time */}
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="text-gray-600 font-medium">
                       Check-in Time
                     </span>
-                    <span className="font-semibold text-gray-900">
-                      {property.policies?.checkInTime}
-                    </span>
+                    {isEditing ? (
+                      <input
+                        type="time"
+                        value={editedProperty?.policies?.checkInTime || ""}
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "policies",
+                            "checkInTime",
+                            e.target.value
+                          )
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <span className="font-semibold text-gray-900">
+                        {property?.policies?.checkInTime}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Check-out Time */}
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="text-gray-600 font-medium">
                       Check-out Time
                     </span>
-                    <span className="font-semibold text-gray-900">
-                      {property.policies?.checkOutTime}
-                    </span>
+                    {isEditing ? (
+                      <input
+                        type="time"
+                        value={editedProperty?.policies?.checkOutTime || ""}
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "policies",
+                            "checkOutTime",
+                            e.target.value
+                          )
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <span className="font-semibold text-gray-900">
+                        {property?.policies?.checkOutTime}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Minimum Stay */}
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="text-gray-600 font-medium">
                       Minimum Stay
                     </span>
-                    <span className="font-semibold text-gray-900">
-                      {property.policies?.minimumStay} night(s)
-                    </span>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min="1"
+                        value={editedProperty?.policies?.minimumStay || ""}
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "policies",
+                            "minimumStay",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <span className="font-semibold text-gray-900">
+                        {property?.policies?.minimumStay} night(s)
+                      </span>
+                    )}
                   </div>
+
+                  {/* Maximum Stay */}
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="text-gray-600 font-medium">
                       Maximum Stay
                     </span>
-                    <span className="font-semibold text-gray-900">
-                      {property.policies?.maximumStay} night(s)
-                    </span>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min="1"
+                        value={editedProperty?.policies?.maximumStay || ""}
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "policies",
+                            "maximumStay",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <span className="font-semibold text-gray-900">
+                        {property?.policies?.maximumStay} night(s)
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1269,6 +1770,7 @@ export default function PropertyDetailPage() {
             </div>
 
             <div className="space-y-6">
+              {/* Fees & Deposits Section */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
                 <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                   <Icon
@@ -1279,37 +1781,111 @@ export default function PropertyDetailPage() {
                   Fees & Deposits
                 </h3>
                 <div className="space-y-4">
+                  {/* Security Deposit */}
                   <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg border border-orange-200">
                     <span className="text-gray-600 font-medium">
                       Security Deposit
                     </span>
-                    <span className="font-bold text-orange-600">
-                      ₹{property.policies?.securityDeposit}
-                    </span>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min="0"
+                        value={editedProperty?.policies?.securityDeposit || ""}
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "policies",
+                            "securityDeposit",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <span className="font-bold text-orange-600">
+                        ₹{property?.policies?.securityDeposit}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Cleaning Fee */}
                   <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <span className="text-gray-600 font-medium">
                       Cleaning Fee
                     </span>
-                    <span className="font-bold text-blue-600">
-                      ₹{property.policies?.cleaningFee}
-                    </span>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min="0"
+                        value={editedProperty?.policies?.cleaningFee || ""}
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "policies",
+                            "cleaningFee",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <span className="font-bold text-blue-600">
+                        ₹{property?.policies?.cleaningFee}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Additional Guest Fee */}
                   <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
                     <span className="text-gray-600 font-medium">
                       Additional Guest Fee
                     </span>
-                    <span className="font-bold text-green-600">
-                      ₹{property.policies?.additionalGuestFee}
-                    </span>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min="0"
+                        value={
+                          editedProperty?.policies?.additionalGuestFee || ""
+                        }
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "policies",
+                            "additionalGuestFee",
+                            Number(e.target.value)
+                          )
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <span className="font-bold text-green-600">
+                        ₹{property?.policies?.additionalGuestFee}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Damage Deposit */}
                   <div className="flex justify-between items-center p-3 bg-red-50 rounded-lg border border-red-200">
                     <span className="text-gray-600 font-medium">
                       Damage Deposit
                     </span>
-                    <span className="font-bold text-red-600">
-                      ₹{property.policies?.damagePolicy?.amount}
-                    </span>
+                    {isEditing ? (
+                      <input
+                        type="number"
+                        min="0"
+                        value={
+                          editedProperty?.policies?.damagePolicy?.amount || ""
+                        }
+                        onChange={(e) =>
+                          handleNestedChange("policies", "damagePolicy", {
+                            ...(editedProperty?.policies?.damagePolicy || {}),
+                            amount: Number(e.target.value),
+                          })
+                        }
+                        className="px-2 py-1 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <span className="font-bold text-red-600">
+                        ₹{property?.policies?.damagePolicy?.amount}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1409,6 +1985,7 @@ export default function PropertyDetailPage() {
 
         {activeTab === "location" && (
           <div className="space-y-6">
+            {/* Address Information */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
               <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                 <Icon
@@ -1419,53 +1996,146 @@ export default function PropertyDetailPage() {
                 Address Information
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* House Number */}
                 <div className="p-4 bg-gray-50 rounded-xl">
                   <label className="text-sm font-medium text-gray-500">
                     House Number
                   </label>
-                  <p className="text-gray-900 font-semibold">
-                    {property.location?.houseNumber}
-                  </p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProperty?.location?.houseNumber || ""}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "location",
+                          "houseNumber",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-semibold mt-2">
+                      {property?.location?.houseNumber}
+                    </p>
+                  )}
                 </div>
+
+                {/* Locality */}
                 <div className="p-4 bg-gray-50 rounded-xl">
                   <label className="text-sm font-medium text-gray-500">
                     Locality
                   </label>
-                  <p className="text-gray-900 font-semibold">
-                    {property.location?.locality}
-                  </p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProperty?.location?.locality || ""}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "location",
+                          "locality",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-semibold mt-2">
+                      {property?.location?.locality}
+                    </p>
+                  )}
                 </div>
+
+                {/* City */}
                 <div className="p-4 bg-gray-50 rounded-xl">
                   <label className="text-sm font-medium text-gray-500">
                     City
                   </label>
-                  <p className="text-gray-900 font-semibold">
-                    {property.location?.city}
-                  </p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProperty?.location?.city || ""}
+                      onChange={(e) =>
+                        handleNestedChange("location", "city", e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-semibold mt-2">
+                      {property?.location?.city}
+                    </p>
+                  )}
                 </div>
+
+                {/* State */}
                 <div className="p-4 bg-gray-50 rounded-xl">
                   <label className="text-sm font-medium text-gray-500">
                     State
                   </label>
-                  <p className="text-gray-900 font-semibold">
-                    {property.location?.state}
-                  </p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProperty?.location?.state || ""}
+                      onChange={(e) =>
+                        handleNestedChange("location", "state", e.target.value)
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-semibold mt-2">
+                      {property?.location?.state}
+                    </p>
+                  )}
                 </div>
+
+                {/* Country */}
                 <div className="p-4 bg-gray-50 rounded-xl">
                   <label className="text-sm font-medium text-gray-500">
                     Country
                   </label>
-                  <p className="text-gray-900 font-semibold">
-                    {property.location?.country}
-                  </p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProperty?.location?.country || ""}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "location",
+                          "country",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-semibold mt-2">
+                      {property?.location?.country}
+                    </p>
+                  )}
                 </div>
+
+                {/* Pincode */}
                 <div className="p-4 bg-gray-50 rounded-xl">
                   <label className="text-sm font-medium text-gray-500">
                     Pincode
                   </label>
-                  <p className="text-gray-900 font-semibold">
-                    {property.location?.pincode}
-                  </p>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      value={editedProperty?.location?.pincode || ""}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "location",
+                          "pincode",
+                          e.target.value
+                        )
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 mt-2"
+                    />
+                  ) : (
+                    <p className="text-gray-900 font-semibold mt-2">
+                      {property?.location?.pincode}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
