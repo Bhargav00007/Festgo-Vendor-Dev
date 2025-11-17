@@ -117,7 +117,7 @@ const VendorsProperties = () => {
   ];
 
   return (
-    <CardBox className="!bg-[#d4f4f2] !shadow-none !rounded-4xl ">
+    <CardBox className="!bg-[#00000] !shadow-none !rounded-4xl ">
       <div className="flex items-center justify-between mb-2 ">
         <div className="flex items-center gap-3">
           <span className="w-16 h-12 rounded-full flex items-center justify-center bg-[#00ceb6] text-white">

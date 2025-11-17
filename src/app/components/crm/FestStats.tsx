@@ -76,29 +76,29 @@ const FestStats = () => {
       title: "Beach Fests",
       value: beachFests,
       icon: <FaUmbrellaBeach className="text-3xl text-blue-600" />,
-      color: "bg-[#dbeafe]",
-      route: "/fests/list", // ✅ updated
+      color: "bg-[#00000]",
+      route: "/fests/list",
     },
     {
       title: "Trips",
       value: trips,
       icon: <FaHiking className="text-3xl text-green-600" />,
-      color: "bg-[#dcfce7]",
-      route: "/festgotrips", // ✅ updated
+      color: "bg-[#00000]",
+      route: "/festgotrips",
     },
     {
       title: "City Fests",
       value: cityFests,
       icon: <FaCity className="text-3xl text-purple-600" />,
-      color: "bg-[#ede9fe]",
-      route: "/cityfest/categories", // ✅ updated
+      color: "bg-[#00000]",
+      route: "/cityfest/categories",
     },
     {
       title: "Menu Types",
       value: menuTypes,
       icon: <FaUtensils className="text-3xl text-orange-500" />,
-      color: "bg-[#fff7ed]",
-      route: "/festbite", // ✅ updated
+      color: "bg-[#00000]",
+      route: "/festbite",
     },
   ];
 
@@ -119,7 +119,7 @@ const FestStats = () => {
 
           <button
             onClick={() => router.push(card.route)}
-            className="mt-1 px-1 py-2 bg-blue-400 text-white text-sm font-medium rounded-full hover:bg-blue-300 cursor-pointer transition "
+            className="mt-1 px-1 py-2 bg-orange-400 text-white text-sm font-medium rounded-full hover:bg-orange-300 cursor-pointer transition "
           >
             View
           </button>

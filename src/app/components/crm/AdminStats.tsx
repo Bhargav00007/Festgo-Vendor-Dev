@@ -102,8 +102,7 @@ const AdminStats = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-      {/* 1️⃣ Current Banner (takes 2 columns) */}
-      <CardBox className="!shadow-none !p-0 bg-[#e0f2ff] !rounded-3xl md:col-span-2 flex flex-col justify-between">
+      <CardBox className="!shadow-none !p-0 bg-[#00000] !rounded-3xl md:col-span-2 flex flex-col justify-between">
         <div className="flex flex-col items-start gap-3">
           <div className="flex items-center gap-2">
             <FaImages className="text-blue-600 text-xl" />
@@ -117,14 +116,14 @@ const AdminStats = () => {
         </div>
         <button
           onClick={() => router.push("/adminhome/adminbanner")}
-          className="mt-4 px-4 py-2 bg-blue-400 text-white text-sm font-medium rounded-full cursor-pointer hover:bg-blue-300 transition"
+          className="mt-4 px-4 py-2 bg-orange-400 text-white text-sm font-medium rounded-full cursor-pointer hover:bg-orange-300 transition"
         >
           Manage Banner
         </button>
       </CardBox>
 
       {/* 2️⃣ Offers Pie Chart */}
-      <CardBox className="!shadow-none !p-0 bg-[#dcfce7] !rounded-3xl flex flex-col justify-between">
+      <CardBox className="!shadow-none !p-0 bg-[#00000] !rounded-3xl flex flex-col justify-between">
         <div className="flex items-center gap-2 mb-2">
           <FaTags className="text-green-600 text-xl" />
           <h5 className="text-gray-600 text-lg font-medium">Offers Overview</h5>
@@ -173,14 +172,14 @@ const AdminStats = () => {
         )}
         <button
           onClick={() => router.push("/adminhome/adminoffers")}
-          className="mt-1 px-4 py-2 bg-blue-400 text-white text-sm font-medium rounded-full cursor-pointer hover:bg-blue-300 transition"
+          className="mt-1 px-4 py-2 bg-orange-400 text-white text-sm font-medium rounded-full cursor-pointer hover:bg-orange-300 transition"
         >
           View Offers
         </button>
       </CardBox>
 
       {/* 3️⃣ Event Types */}
-      <CardBox className="!shadow-none !p-0 bg-[#fef9c3] !rounded-3xl flex flex-col justify-between">
+      <CardBox className="!shadow-none !p-0 bg-[#00000] !rounded-3xl flex flex-col justify-between">
         <div className="flex flex-col items-start gap-3">
           <div className="flex items-center gap-2">
             <FaCalendarAlt className="text-yellow-500 text-xl" />
@@ -192,7 +191,7 @@ const AdminStats = () => {
         </div>
         <button
           onClick={() => router.push("/events")}
-          className="mt-1 px-4 py-2 bg-blue-400 text-white text-sm font-medium rounded-full cursor-pointer hover:bg-blue-300 transition"
+          className="mt-1 px-4 py-2 bg-orange-400  text-white text-sm font-medium rounded-full cursor-pointer hover:bg-orange-300 transition"
         >
           View Events
         </button>

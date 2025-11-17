@@ -103,7 +103,7 @@ const TotalVendors = () => {
   };
 
   return (
-    <CardBox className="!shadow-none !p-3 !bg-[#f9dee8] !rounded-4xl">
+    <CardBox className="!shadow-none !p-3 !bg-[#00000] !rounded-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="w-16 h-12 rounded-full flex items-center justify-center bg-red-500 text-white">
